@@ -33,6 +33,13 @@ namespace dae
 
 		bool SaveBufferToImage() const;
 
+		//Exersize Parts
+		void Render_W1_Part1(); //Rasterizer Stage Only
+		void Render_W1_Part2(); //Projection Stage (Camera)
+		void Render_W1_Part3(); //BarCentric Coordimates
+		void Render_W1_Part4(); //Depth Buffer
+		void Render_W1_Part5(); //Boundingbox Optimization
+
 	private:
 		SDL_Window* m_pWindow{};
 
@@ -42,7 +49,7 @@ namespace dae
 
 		//float* m_pDepthBufferPixels{};
 
-		Camera m_Camera{};
+		Camera m_Camera{ {0.f,0.f,-10.f}, 60.f };
 
 		int m_Width{};
 		int m_Height{};

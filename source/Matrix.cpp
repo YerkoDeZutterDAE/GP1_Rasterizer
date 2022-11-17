@@ -146,7 +146,23 @@ namespace dae {
 	{
 		//TODO W1
 
-		return {};
+
+
+		Vector3 worldUp{ 0,1,0 };
+
+		forward;
+		Vector3 right = Vector3::Cross(up, forward);
+		right.Normalize();
+		Vector3 vieuwUp = Vector3::Cross(forward, right);
+		vieuwUp.Normalize();
+
+		Matrix rMatrix{
+			right,
+			up,
+			forward,
+			origin };
+
+		return { rMatrix };
 	}
 
 	Matrix Matrix::CreatePerspectiveFovLH(float fov, float aspect, float zn, float zf)
