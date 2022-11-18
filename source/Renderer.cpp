@@ -157,34 +157,81 @@ void dae::Renderer::Render_W1_Part1()
 
 	VertexTransformationFunction(worldVertices, vieuwVertices);
 
+	for (auto& v : vieuwVertices)
+	{
+		//if (float(px) - (v.position.x * m_Width + m_Width / 2) > -10 && float(px) - (v.position.x * m_Width + m_Width / 2) < 10)
+		//{
+		//	if (float(py) - (v.position.y * m_Height + m_Height / 2) > -10 && float(py) - (v.position.y * m_Height + m_Height / 2) < 10)
+		//	{
+		//		gradient = 1;
+		//		gradient += 1;
+		//		gradient /= 2;
+		//	}
+		//	//std::cout << v.position.x << std::endl;
+		//}
+
+		v.position.x = v.position.x * m_Width + m_Width / 2;
+		v.position.y = v.position.y * m_Height + m_Height / 2;
+	}
+
+	std::vector<Vector2> tri
+	{
+	Vector2{vieuwVertices[0].position.x, vieuwVertices[0].position.y},
+	Vector2{vieuwVertices[1].position.x, vieuwVertices[1].position.y},
+	Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
+	};
+
+	std::vector<Vector2> TriToPix
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<Vector2> Edges
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<float> triCross
+	{
+		{},
+		{},
+		{}
+	};
+
 	//RENDER LOGIC
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			Vector3 screenPix{ float(px),float(py),1 };
+			Vector2 screenPix{ float(px),float(py) };
 
 			float gradient{};
-
-			for (auto& v : vieuwVertices)
-			{
-				//if (float(px) - (v.position.x * m_Width + m_Width / 2) > -10 && float(px) - (v.position.x * m_Width + m_Width / 2) < 10)
-				//{
-				//	if (float(py) - (v.position.y * m_Height + m_Height / 2) > -10 && float(py) - (v.position.y * m_Height + m_Height / 2) < 10)
-				//	{
-				//		gradient = 1;
-				//		gradient += 1;
-				//		gradient /= 2;
-				//	}
-				//	//std::cout << v.position.x << std::endl;
-				//}
-
-				v.position.x = v.position.x * m_Width + m_Width / 2;
-				v.position.y = v.position.y * m_Height + m_Height / 2;
-			}
-
-			//Vector3 tri{};
 			//Vector3 point{ m_Camera.forward + m_Camera.origin + screenPix };
+			//std::cout << vieuwVertices[0].position.x << " - " << vieuwVertices[1].position.x << " - " << vieuwVertices[2].position.x << std::endl;
+
+
+			TriToPix[0] = { screenPix - tri[0] };
+			TriToPix[1] = { screenPix - tri[1] };
+			TriToPix[2] = { screenPix - tri[2] };
+
+			Edges[0] = { tri[1] - tri[0] };
+			Edges[1] = { tri[2] - tri[1] };
+			Edges[2] = { tri[0] - tri[2] };
+
+			triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
+			triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
+			triCross[2] = { Vector2::Cross(Edges[2], TriToPix[2]) };
+
+			if (!(triCross[0] >= 0 || triCross[1] >= 0 || triCross[2] >= 0))
+			{
+				gradient = 1;
+				gradient += 1;
+				gradient /= 2;
+			}
 
 			////side 1
 			//Vector3 sVector{ vieuwVertices[0].position - vieuwVertices[2].position };
