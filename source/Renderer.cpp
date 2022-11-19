@@ -182,6 +182,9 @@ void dae::Renderer::Render_W1_Part1()
 	Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
 	};
 
+#ifdef BresenhamActive
+
+
 	std::vector<std::vector<Vector2>> edgePixels
 	{
 		{},
@@ -202,6 +205,8 @@ void dae::Renderer::Render_W1_Part1()
 	Utils::Bresenham(tri[1], tri[0], edgePixels[0], yPixels);
 	Utils::Bresenham(tri[2], tri[1], edgePixels[1], yPixels);
 	Utils::Bresenham(tri[0], tri[2], edgePixels[2], yPixels);
+
+#else
 
 	std::vector<Vector2> TriToPix
 	{
@@ -244,6 +249,8 @@ void dae::Renderer::Render_W1_Part1()
 		{},
 		{}
 	};
+
+#endif // BresenhamActive
 
 	//m_pBackBufferPixels = {};
 	//m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
