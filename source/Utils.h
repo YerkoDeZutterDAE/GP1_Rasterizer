@@ -3,6 +3,7 @@
 #include <fstream>
 #include "Math.h"
 #include "DataTypes.h"
+#include <iostream>
 
 #define DISABLE_OBJ
 
@@ -172,5 +173,82 @@ namespace dae
 #endif
 		}
 #pragma warning(pop)
+		void Bresenham(const Vector2& p1, const Vector2& p2, std::vector<Vector2>& output, std::vector<Vector2>& outputY)
+		{
+			output.clear();
+			//int m_new = 2 * (p2.y - p1.y);
+			//int slope_error_new = m_new - (p2.x - p1.x);
+
+			//for (int x = p1.x, y = p1.y; x <= p2.x; x++)
+			//{
+			//	output.push_back(Vector2{float(x),float(y)});
+			//	//std::cout << x << ", " << y << std::endl;
+
+			//	slope_error_new += m_new;
+
+			//	if (slope_error_new >= 0)
+			//	{
+			//		y++;
+			//		slope_error_new -= 2 * (p2.x - p1.x);
+			//	}
+			//}
+
+			int x1 = p1.x;
+			int x2 = p2.x;
+			int y1 = p1.y;
+			int y2 = p2.y;
+
+			int dx = abs(x2 - x1);
+			int dy = abs(y2 - y1);
+			bool test{};
+
+			if (!(dx > dy))
+			{
+				//int d = dx;
+				//dx = dy;
+				//dy = d;
+
+				x1 = p1.y;
+				x2 = p2.y;
+				y1 = p1.x;
+				y2 = p2.x;
+
+				dx = abs(x2 - x1);
+				dy = abs(y2 - y1);
+
+				test = true;
+			}
+
+			int pk = 2 * dy - dx;
+			for (int i = 0; i <= dx; i++)
+			{
+				if (test)
+				{
+					if (outputY[x1].x == 0)
+						outputY[x1].x = 1000;
+					output.push_back(Vector2{ float(y1),float(x1) });
+					outputY[x1] = { float(std::min(int(outputY[x1].x), y1)), float(std::max(int(outputY[x1].y), y1)) };
+				}
+				else
+				{
+					if (outputY[y1].x == 0)
+						outputY[y1].x = 1000;
+					output.push_back(Vector2{ float(x1),float(y1) });
+					outputY[y1] = { float(std::min(int(outputY[y1].x), x1)), float(std::max(int(outputY[y1].y), x1)) };
+				}
+				//std::cout << x1 << ", " << y1 << std::endl;
+
+				x1 < x2 ? x1++ : x1--;
+				if (pk < 0)
+				{
+					pk = pk + 2 * dy;
+				}
+				else
+				{
+					y1 < y2 ? y1++ : y1--;
+					pk = pk + 2 * dy - 2 * dx;
+				}
+			}
+		}
 	}
 }

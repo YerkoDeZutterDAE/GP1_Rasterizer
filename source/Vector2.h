@@ -28,6 +28,7 @@ namespace dae
 		//Vector2& operator-();
 		Vector2& operator+=(const Vector2& v);
 		Vector2& operator-=(const Vector2& v);
+		bool operator==(const Vector2& v);
 		Vector2& operator/=(float scale);
 		Vector2& operator*=(float scale);
 		float& operator[](int index);
