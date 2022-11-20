@@ -281,6 +281,12 @@ void dae::Renderer::Render_W1_Part1()
 
 		float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
 
+		Vector2 BoundBoxMin = {Vector2::min(tri[0], Vector2::min(tri[1],tri[2]))};
+		Vector2 BoundBoxMax = {Vector2::max(tri[0], Vector2::max(tri[1],tri[2]))};
+
+		if (0 >= BoundBoxMin.x || 0 >= BoundBoxMin.y || m_Width - 1 <= BoundBoxMin.x || m_Height - 1 <= BoundBoxMin.y)
+			continue;
+
 #endif // BresenhamActive
 
 
@@ -323,6 +329,9 @@ void dae::Renderer::Render_W1_Part1()
 
 #else
 
+				if (px < BoundBoxMin.x || px > BoundBoxMax.x || py < BoundBoxMin.y || py > BoundBoxMax.y)
+					continue;
+
 				TriToPix[0] = { screenPix - tri[0] };
 				TriToPix[1] = { screenPix - tri[1] };
 				TriToPix[2] = { screenPix - tri[2] };
@@ -360,7 +369,6 @@ void dae::Renderer::Render_W1_Part1()
 					//gradient = 1;
 					//gradient += 1;
 					//gradient /= 2;
-
 					//ColorRGB finalColor{ gradient, gradient, gradient };
 
 #endif // BresenhamActive

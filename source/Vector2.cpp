@@ -49,6 +49,26 @@ namespace dae {
 		return v1.x * v2.y - v1.y * v2.x;
 	}
 
+	// MIN AND MAX
+
+	Vector2 Vector2::min(const Vector2& v1, const Vector2& v2)
+	{
+		return Vector2
+		{
+			std::min(v1.x, v2.x),
+			std::min(v1.y, v2.y)
+		};
+	}
+
+	Vector2 Vector2::max(const Vector2& v1, const Vector2& v2)
+	{
+		return Vector2
+		{
+			std::max(v1.x, v2.x),
+			std::max(v1.y, v2.y)
+		};
+	}
+
 #pragma region Operator Overloads
 	Vector2 Vector2::operator*(float scale) const
 	{
