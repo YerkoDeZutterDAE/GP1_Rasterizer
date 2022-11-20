@@ -162,9 +162,9 @@ void dae::Renderer::Render_W1_Part1()
 	std::vector<std::vector<Vertex>> Triangles
 	{
 		{
-			{{0.f, 4.f, 2.f}, colors::Red},
-			{{3.f, -2.f, 2.f}, colors::Green},
-			{{ -3.f, -2.f, 2.f}, colors::Blue}
+			{{0.f, 4.f, -2.f}, colors::Red},
+			{{3.f, -2.f, -2.f}, colors::Green},
+			{{ -3.f, -2.f, -2.f}, colors::Blue}
 		},
 		{
 			{{0.f, 2.f, 0.f}, colors::Red},
@@ -272,6 +272,15 @@ void dae::Renderer::Render_W1_Part1()
 			{}
 		};
 
+
+
+		Edges[0] = { tri[1] - tri[0] };
+		Edges[1] = { tri[2] - tri[1] };
+		Edges[2] = { tri[0] - tri[2] };
+
+
+		float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
+
 #endif // BresenhamActive
 
 
@@ -318,17 +327,16 @@ void dae::Renderer::Render_W1_Part1()
 				TriToPix[1] = { screenPix - tri[1] };
 				TriToPix[2] = { screenPix - tri[2] };
 
-				Edges[0] = { tri[1] - tri[0] };
-				Edges[1] = { tri[2] - tri[1] };
-				Edges[2] = { tri[0] - tri[2] };
-
 				triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
 				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
 				triCross[2] = { Vector2::Cross(Edges[2], TriToPix[2]) };
 
+				//UV[0] = { weight[0] * (vieuwVertices[0].color / vieuwVertices[0].position.z)};
 
+				//Texture
 
-				float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
+				if ((triCross[0] > 0 || triCross[1] >= 0 || triCross[2] >= 0))
+					continue;
 
 				weight[0] = { triCross[0] / triArea };
 				weight[1] = { triCross[1] / triArea };
@@ -338,15 +346,14 @@ void dae::Renderer::Render_W1_Part1()
 				inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
 				inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * weight[2] };
 
-				float inerPolatWeight = {1 / (inerPolat[0] + inerPolat[1] + inerPolat[2])};
+				float inerPolatWeight = { 1 / (inerPolat[0] + inerPolat[1] + inerPolat[2]) };
 
-				//UV[0] = { weight[0] * (vieuwVertices[0].color / vieuwVertices[0].position.z)};
+				int pIdx{ px + py * m_Width };
 
-				//Texture
-
-				if ((triCross[0] > 0 || triCross[1] >= 0 || triCross[2] >= 0))
+				if (m_pDepthBufferPixels[pIdx] < inerPolatWeight)
 					continue;
 
+				m_pDepthBufferPixels[pIdx] = inerPolatWeight;
 
 				ColorRGB finalColor{ vertices_ndc[0].color * weight[0] + vertices_ndc[1].color * weight[1] + vertices_ndc[2].color * weight[2] };
 
