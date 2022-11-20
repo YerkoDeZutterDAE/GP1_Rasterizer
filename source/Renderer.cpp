@@ -131,6 +131,9 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		projectedVertex.color = v.color;
 
+		projectedVertex.position.x = projectedVertex.position.x * m_Width + m_Width / 2;
+		projectedVertex.position.y = projectedVertex.position.y * m_Height + m_Height / 2;
+
 		vertices_out.emplace_back(projectedVertex);
 	}
 }
@@ -146,218 +149,217 @@ void dae::Renderer::Render_W1_Part1()
 	{ {.5f, -.5f, 1.f}, colors::White },
 	{ { -.5f, -.5f, 1.f}, colors::White }*/
 	//Define Tri - Vertices in NDC space
-	std::vector<Vertex> vertices_ndc
+	
+	//-----------------
+
+	//std::vector<Vertex> vertices_ndc
+	//{
+	//	{{0.f, 2.f, 0.f}, colors::Red},
+	//	{{1.f, 0.f, 0.f}, colors::Red},
+	//	{{ -1.f, 0.f, 0.f}, colors::Red}
+	//};
+
+	std::vector<std::vector<Vertex>> Triangles
 	{
-		{{0.f, 2.f, 0.f}, colors::Red},
-		{{1.f, 0.f, 0.f}, colors::Blue},
-		{{ -1.f, 0.f, 0.f}, colors::Green}
+		{
+			{{0.f, 3.f, -1.f}, colors::Red},
+			{{2.f, -1.f, -1.f}, colors::Green},
+			{{ -2.f, -1.f, -1.f}, colors::Blue}
+		},
+		{
+			{{0.f, 1.5f, 0.f}, colors::Red},
+			{{1.f, -0.5f, 0.f}, colors::Red},
+			{{ -1.f, -0.5f, 0.f}, colors::Red}
+		}
 	};
 
-	std::vector<Vertex> worldVertices{ vertices_ndc };
-	std::vector<Vertex> vieuwVertices{};
+	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
 
-	VertexTransformationFunction(worldVertices, vieuwVertices);
-
-	for (auto& v : vieuwVertices)
+	for (auto& vertices_ndc : Triangles)
 	{
-		//if (float(px) - (v.position.x * m_Width + m_Width / 2) > -10 && float(px) - (v.position.x * m_Width + m_Width / 2) < 10)
+
+		std::vector<Vertex> worldVertices{ vertices_ndc };
+		std::vector<Vertex> vieuwVertices{};
+
+		VertexTransformationFunction(worldVertices, vieuwVertices);
+
+		//for (auto& v : vieuwVertices)
 		//{
-		//	if (float(py) - (v.position.y * m_Height + m_Height / 2) > -10 && float(py) - (v.position.y * m_Height + m_Height / 2) < 10)
-		//	{
-		//		gradient = 1;
-		//		gradient += 1;
-		//		gradient /= 2;
-		//	}
-		//	//std::cout << v.position.x << std::endl;
+		//	v.position.x = v.position.x * m_Width + m_Width / 2;
+		//	v.position.y = v.position.y * m_Height + m_Height / 2;
 		//}
 
-		v.position.x = v.position.x * m_Width + m_Width / 2;
-		v.position.y = v.position.y * m_Height + m_Height / 2;
-	}
-
-	std::vector<Vector2> tri
-	{
-	Vector2{vieuwVertices[0].position.x, vieuwVertices[0].position.y},
-	Vector2{vieuwVertices[1].position.x, vieuwVertices[1].position.y},
-	Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
-	};
-
-#ifdef BresenhamActive
-
-
-	std::vector<std::vector<Vector2>> edgePixels
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<int> usedIndex{};
-
-	std::vector<Vector2> yPixels{};
-
-	yPixels.resize(m_Height);
-
-	//std::cout << "ok?" << std::endl;
-
-	//std::vector<Vector2> markedPix{};
-
-	Utils::Bresenham(tri[1], tri[0], edgePixels[0], yPixels);
-	Utils::Bresenham(tri[2], tri[1], edgePixels[1], yPixels);
-	Utils::Bresenham(tri[0], tri[2], edgePixels[2], yPixels);
-
-#else
-
-	std::vector<Vector2> TriToPix
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<Vector2> Edges
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<float> triCross
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<float> weight
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<float> inerPolat
-	{
-		{},
-		{},
-		{}
-	};
-
-	std::vector<Vector2> UV
-	{
-		{},
-		{},
-		{}
-	};
-
-#endif // BresenhamActive
-
-	//m_pBackBufferPixels = {};
-	//m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
-	//m_pBackBufferPixels = (uint32_t*)SDL_FillRect;
-	SDL_FillRect(m_pBackBuffer, NULL,  SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
-
-	//RENDER LOGIC
-	for (int px{}; px < m_Width; ++px)
-	{
-		for (int py{}; py < m_Height; ++py)
+		std::vector<Vector2> tri
 		{
-			Vector2 screenPix{ float(px),float(py) };
+		Vector2{vieuwVertices[0].position.x, vieuwVertices[0].position.y},
+		Vector2{vieuwVertices[1].position.x, vieuwVertices[1].position.y},
+		Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
+		};
 
-			float gradient{};
-			//Vector3 point{ m_Camera.forward + m_Camera.origin + screenPix };
-			//std::cout << vieuwVertices[0].position.x << " - " << vieuwVertices[1].position.x << " - " << vieuwVertices[2].position.x << std::endl;
-#ifdef BresenhamActive
+	#ifdef BresenhamActive
 
-			//if (std::find(edgePixels[0].begin(), edgePixels[0].end(), screenPix) != edgePixels[0].end())
-			//{
-			//	gradient = 1;
-			//	gradient += 1;
-			//	gradient /= 2;
-			//}
-			//else if (std::find(edgePixels[1].begin(), edgePixels[1].end(), screenPix) != edgePixels[1].end())
-			//{
-			//	gradient = 1;
-			//	gradient += 1;
-			//	gradient /= 2;
-			//}
-			//else if (std::find(edgePixels[2].begin(), edgePixels[2].end(), screenPix) != edgePixels[2].end())
-			//{
-			//	gradient = 1;
-			//	gradient += 1;
-			//	gradient /= 2;
-			//}
 
-			if (yPixels[py].x == 0)
+		std::vector<std::vector<Vector2>> edgePixels
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<int> usedIndex{};
+
+		std::vector<Vector2> yPixels{};
+
+		//std::vector<ColorRGB[2]> edgeColors{};
+		//ColorRGB pEdgeColors{};
+		std::vector<std::vector<dae::ColorRGB>> edgeColors{};
+
+		yPixels.resize(m_Height);
+		edgeColors.resize(m_Height);
+
+		//std::cout << "ok?" << std::endl;
+
+		//std::vector<Vector2> markedPix{};
+
+		Utils::Bresenham(tri[1], tri[0], vertices_ndc[1].color, vertices_ndc[0].color, yPixels, edgeColors);
+		Utils::Bresenham(tri[2], tri[1], vertices_ndc[2].color, vertices_ndc[1].color, yPixels, edgeColors);
+		Utils::Bresenham(tri[0], tri[2], vertices_ndc[0].color, vertices_ndc[2].color, yPixels, edgeColors);
+
+	#else
+
+		std::vector<Vector2> TriToPix
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<Vector2> Edges
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<float> triCross
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<float> weight
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<float> inerPolat
+		{
+			{},
+			{},
+			{}
+		};
+
+		std::vector<Vector2> UV
+		{
+			{},
+			{},
+			{}
+		};
+
+	#endif // BresenhamActive
+
+		//m_pBackBufferPixels = {};
+		//m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
+		//m_pBackBufferPixels = (uint32_t*)SDL_FillRect;
+
+		//RENDER LOGIC
+		for (int px{}; px < m_Width; ++px)
+		{
+			for (int py{}; py < m_Height; ++py)
 			{
-				//m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				//	static_cast<uint8_t>(0),
-				//	static_cast<uint8_t>(0),
-				//	static_cast<uint8_t>(0));
-				continue;
+				Vector2 screenPix{ float(px),float(py) };
+
+				float gradient{};
+				ColorRGB finalColor{  };
+				//Vector3 point{ m_Camera.forward + m_Camera.origin + screenPix };
+				//std::cout << vieuwVertices[0].position.x << " - " << vieuwVertices[1].position.x << " - " << vieuwVertices[2].position.x << std::endl;
+	#ifdef BresenhamActive
+
+				//if (py < 10)
+				//{
+				//	continue;
+				//}
+
+				if (yPixels[py].x == 0)
+				{
+					continue;
+				}
+
+				if (yPixels[py].x <= px && yPixels[py].y >= px)
+				{
+					float d = yPixels[py].y - yPixels[py].x;
+					finalColor = { (((d - (px - yPixels[py].x)) / d) * edgeColors[py][0]) + (((px - yPixels[py].x) / d) * edgeColors[py][1]) };
+					//finalColor = { pixColor };
+				}
+				else
+				{
+					continue;
+				}
+
+	#else
+
+				TriToPix[0] = { screenPix - tri[0] };
+				TriToPix[1] = { screenPix - tri[1] };
+				TriToPix[2] = { screenPix - tri[2] };
+
+				Edges[0] = { tri[1] - tri[0] };
+				Edges[1] = { tri[2] - tri[1] };
+				Edges[2] = { tri[0] - tri[2] };
+
+				triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
+				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
+				triCross[2] = { Vector2::Cross(Edges[2], TriToPix[2]) };
+
+
+
+				float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
+
+				weight[0] = { triCross[0] / triArea };
+				weight[1] = { triCross[1] / triArea };
+				weight[2] = { triCross[2] / triArea };
+
+				inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * weight[0] };
+				inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
+				inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * weight[2] };
+
+				float inerPolatWeight = {1 / (inerPolat[0] + inerPolat[1] + inerPolat[2])};
+
+				//UV[0] = { weight[0] * (vieuwVertices[0].color / vieuwVertices[0].position.z)};
+
+				//Texture
+
+				if (!(triCross[0] >= 0 || triCross[1] >= 0 || triCross[2] >= 0))
+				{
+					gradient = 1;
+					gradient += 1;
+					gradient /= 2;
+				}
+
+	#endif // BresenhamActive
+
+				//ColorRGB finalColor{ gradient, gradient, gradient };
+
+				//Update Color in Buffer
+				finalColor.MaxToOne();
+
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
 			}
-
-			if (yPixels[py].x <= px && yPixels[py].y >= px)
-			{
-				gradient = 1;
-				gradient += 1;
-				gradient /= 2;
-			}
-			else
-			{
-				continue;
-			}
-
-#else
-
-			TriToPix[0] = { screenPix - tri[0] };
-			TriToPix[1] = { screenPix - tri[1] };
-			TriToPix[2] = { screenPix - tri[2] };
-
-			Edges[0] = { tri[1] - tri[0] };
-			Edges[1] = { tri[2] - tri[1] };
-			Edges[2] = { tri[0] - tri[2] };
-
-			triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
-			triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
-			triCross[2] = { Vector2::Cross(Edges[2], TriToPix[2]) };
-
-
-
-			float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
-
-			weight[0] = { triCross[0] / triArea };
-			weight[1] = { triCross[1] / triArea };
-			weight[2] = { triCross[2] / triArea };
-
-			inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * weight[0] };
-			inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
-			inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * weight[2] };
-
-			float inerPolatWeight = {1 / (inerPolat[0] + inerPolat[1] + inerPolat[2])};
-
-			//UV[0] = { weight[0] * (vieuwVertices[0].color / vieuwVertices[0].position.z)};
-
-			//Texture
-
-			if (!(triCross[0] >= 0 || triCross[1] >= 0 || triCross[2] >= 0))
-			{
-				gradient = 1;
-				gradient += 1;
-				gradient /= 2;
-			}
-
-#endif // BresenhamActive
-
-			ColorRGB finalColor{ gradient, gradient, gradient };
-
-			//Update Color in Buffer
-			finalColor.MaxToOne();
-
-			m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
 		}
 	}
 }

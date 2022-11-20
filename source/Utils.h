@@ -173,9 +173,9 @@ namespace dae
 #endif
 		}
 #pragma warning(pop)
-		void Bresenham(const Vector2& p1, const Vector2& p2, std::vector<Vector2>& output, std::vector<Vector2>& outputY)
+		void Bresenham(const Vector2& p1, const Vector2& p2, const ColorRGB& color1, const ColorRGB& color2, std::vector<Vector2>& outputY, std::vector<std::vector<dae::ColorRGB>>& outputColors)
 		{
-			output.clear();
+			//output.clear();
 			//int m_new = 2 * (p2.y - p1.y);
 			//int slope_error_new = m_new - (p2.x - p1.x);
 
@@ -193,6 +193,9 @@ namespace dae
 			//	}
 			//}
 
+			ColorRGB c1 = color1;
+			ColorRGB c2 = color2;
+
 			int x1 = p1.x;
 			int x2 = p2.x;
 			int y1 = p1.y;
@@ -204,9 +207,9 @@ namespace dae
 
 			if (!(dx > dy))
 			{
-				//int d = dx;
-				//dx = dy;
-				//dy = d;
+
+				//c1 = color2;
+				//c2 = color1;
 
 				x1 = p1.y;
 				x2 = p2.y;
@@ -219,22 +222,64 @@ namespace dae
 				test = true;
 			}
 
+			float dFull{sqrt(float(dx * dx + dy * dy))};
+
 			int pk = 2 * dy - dx;
 			for (int i = 0; i <= dx; i++)
 			{
+				ColorRGB pixColor{ (((dFull - i) / dFull) * c1) + (((i) / dFull) * c2) };
 				if (test)
 				{
-					if (outputY[x1].x == 0)
-						outputY[x1].x = 1000;
-					output.push_back(Vector2{ float(y1),float(x1) });
-					outputY[x1] = { float(std::min(int(outputY[x1].x), y1)), float(std::max(int(outputY[x1].y), y1)) };
+					if (!(x1 < 0 || x1 > outputY.size() - 1))
+					{
+						if (outputY[x1].x == 0)
+							outputY[x1].x = 1000;
+						if (!outputColors[x1].size())
+							outputColors[x1].resize(2);
+
+						if (std::min(int(outputY[x1].x), y1) == y1)
+						{
+							outputY[x1].x = (float)y1;
+							outputColors[x1][0] = pixColor;
+						}
+						else if (std::max(int(outputY[x1].y), y1) == y1)
+						{
+							outputY[x1].y = (float)y1;
+							outputColors[x1][1] = pixColor;
+						}
+					}
+
+					//outputY[x1] = { float(std::min(int(outputY[x1].x), y1)), float(std::max(int(outputY[x1].y), y1)) };
+
+					//outputColors[x1][0] = ColorRGB{ 1,0,0 };
 				}
 				else
 				{
-					if (outputY[y1].x == 0)
-						outputY[y1].x = 1000;
-					output.push_back(Vector2{ float(x1),float(y1) });
-					outputY[y1] = { float(std::min(int(outputY[y1].x), x1)), float(std::max(int(outputY[y1].y), x1)) };
+					if (!(y1 < 0 || y1 > outputY.size() - 1))
+					{
+						if (outputY[y1].x == 0)
+							outputY[y1].x = 1000;
+						if (!outputColors[y1].size())
+							outputColors[y1].resize(2);
+
+						//ColorRGB pixColor{ (((dFull - i) / dFull) * c1) + (((i) / dFull) * c2) };
+
+						if (std::min(int(outputY[y1].x), x1) == x1)
+						{
+							//std::cout << pixColor.r << ", " << pixColor.g << ", " << pixColor.b << std::endl;
+							outputY[y1].x = (float)x1;
+							outputColors[y1][0] = pixColor;
+						}
+						else if (std::max(int(outputY[y1].y), x1) == x1)
+						{
+							outputY[y1].y = (float)x1;
+							outputColors[y1][1] = pixColor;
+						}
+					}
+
+					//outputY[y1] = { float(std::min(int(outputY[y1].x), x1)), float(std::max(int(outputY[y1].y), x1)) };
+
+					//outputColors[y1][0] = ColorRGB{ 1,0,0 };
 				}
 				//std::cout << x1 << ", " << y1 << std::endl;
 
