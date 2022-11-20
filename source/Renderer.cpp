@@ -14,7 +14,7 @@
 using namespace dae;
 
 //#define mainRender
-#define BresenhamActive
+//#define BresenhamActive
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -27,15 +27,15 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0, 0, 0, 0);
 	m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
 
-	//m_pDepthBufferPixels = new float[m_Width * m_Height];
+	m_pDepthBufferPixels = new float[m_Width * m_Height];
 
 	//Initialize Camera
-	m_Camera.Initialize(60.f, { .0f,.0f,-10.f });
+	m_Camera.Initialize(60.f, { .0f,.0f,-20.f });
 }
 
 Renderer::~Renderer()
 {
-	//delete[] m_pDepthBufferPixels;
+	delete[] m_pDepthBufferPixels;
 }
 
 void Renderer::Update(Timer* pTimer)
@@ -162,18 +162,21 @@ void dae::Renderer::Render_W1_Part1()
 	std::vector<std::vector<Vertex>> Triangles
 	{
 		{
-			{{0.f, 3.f, -1.f}, colors::Red},
-			{{2.f, -1.f, -1.f}, colors::Green},
-			{{ -2.f, -1.f, -1.f}, colors::Blue}
+			{{0.f, 4.f, 2.f}, colors::Red},
+			{{3.f, -2.f, 2.f}, colors::Green},
+			{{ -3.f, -2.f, 2.f}, colors::Blue}
 		},
 		{
-			{{0.f, 1.5f, 0.f}, colors::Red},
-			{{1.f, -0.5f, 0.f}, colors::Red},
-			{{ -1.f, -0.5f, 0.f}, colors::Red}
+			{{0.f, 2.f, 0.f}, colors::Red},
+			{{1.5f, -1.f, 0.f}, colors::Red},
+			{{ -1.5f, -1.f, 0.f}, colors::Red}
 		}
 	};
 
 	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
+
+	int pixelCount{m_Width*m_Height};
+	std::fill_n(m_pDepthBufferPixels, pixelCount, FLT_MAX);
 
 	for (auto& vertices_ndc : Triangles)
 	{
@@ -196,7 +199,7 @@ void dae::Renderer::Render_W1_Part1()
 		Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
 		};
 
-	#ifdef BresenhamActive
+#ifdef BresenhamActive
 
 
 		std::vector<std::vector<Vector2>> edgePixels
@@ -225,7 +228,7 @@ void dae::Renderer::Render_W1_Part1()
 		Utils::Bresenham(tri[2], tri[1], vertices_ndc[2].color, vertices_ndc[1].color, yPixels, edgeColors);
 		Utils::Bresenham(tri[0], tri[2], vertices_ndc[0].color, vertices_ndc[2].color, yPixels, edgeColors);
 
-	#else
+#else
 
 		std::vector<Vector2> TriToPix
 		{
@@ -269,11 +272,8 @@ void dae::Renderer::Render_W1_Part1()
 			{}
 		};
 
-	#endif // BresenhamActive
+#endif // BresenhamActive
 
-		//m_pBackBufferPixels = {};
-		//m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
-		//m_pBackBufferPixels = (uint32_t*)SDL_FillRect;
 
 		//RENDER LOGIC
 		for (int px{}; px < m_Width; ++px)
@@ -283,15 +283,11 @@ void dae::Renderer::Render_W1_Part1()
 				Vector2 screenPix{ float(px),float(py) };
 
 				float gradient{};
-				ColorRGB finalColor{  };
 				//Vector3 point{ m_Camera.forward + m_Camera.origin + screenPix };
 				//std::cout << vieuwVertices[0].position.x << " - " << vieuwVertices[1].position.x << " - " << vieuwVertices[2].position.x << std::endl;
-	#ifdef BresenhamActive
+#ifdef BresenhamActive
 
-				//if (py < 10)
-				//{
-				//	continue;
-				//}
+				ColorRGB finalColor{  };
 
 				if (yPixels[py].x == 0)
 				{
@@ -309,7 +305,14 @@ void dae::Renderer::Render_W1_Part1()
 					continue;
 				}
 
-	#else
+				int pIdx{ px + py * m_Width };
+
+				if (m_pDepthBufferPixels[pIdx] < 0)
+					continue;
+
+				m_pDepthBufferPixels[pIdx] = 0;
+
+#else
 
 				TriToPix[0] = { screenPix - tri[0] };
 				TriToPix[1] = { screenPix - tri[1] };
@@ -341,16 +344,19 @@ void dae::Renderer::Render_W1_Part1()
 
 				//Texture
 
-				if (!(triCross[0] >= 0 || triCross[1] >= 0 || triCross[2] >= 0))
-				{
-					gradient = 1;
-					gradient += 1;
-					gradient /= 2;
-				}
+				if ((triCross[0] > 0 || triCross[1] >= 0 || triCross[2] >= 0))
+					continue;
 
-	#endif // BresenhamActive
 
-				//ColorRGB finalColor{ gradient, gradient, gradient };
+				ColorRGB finalColor{ vertices_ndc[0].color * weight[0] + vertices_ndc[1].color * weight[1] + vertices_ndc[2].color * weight[2] };
+
+					//gradient = 1;
+					//gradient += 1;
+					//gradient /= 2;
+
+					//ColorRGB finalColor{ gradient, gradient, gradient };
+
+#endif // BresenhamActive
 
 				//Update Color in Buffer
 				finalColor.MaxToOne();
