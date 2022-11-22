@@ -115,23 +115,23 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 	//float perspectiveDevide{};
 
-	for (auto& v : vertices_in)
+	for (auto v : vertices_in)
 	{
 		Vertex viewVertex{};
 		Vertex projectedVertex{};
 
-		viewVertex = v;
+		v.position = m_Camera.GetLookatVector(v.position);
 
-		viewVertex.position = m_Camera.GetLookatVector(viewVertex.position);
-
-		projectedVertex.position.x = viewVertex.position.x / viewVertex.position.z;
-		projectedVertex.position.y = viewVertex.position.y / viewVertex.position.z;
+		projectedVertex.position.x = v.position.x / v.position.z;
+		projectedVertex.position.y = v.position.y / v.position.z;
 		projectedVertex.position.z = v.position.z;
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
 
 		projectedVertex.position.x = projectedVertex.position.x / (aspec * m_Camera.fov);
 		projectedVertex.position.y = projectedVertex.position.y / m_Camera.fov;
+
+		//-----------------------------------------------------------
 
 		projectedVertex.color = v.color;
 
@@ -532,11 +532,15 @@ void dae::Renderer::Render_W1_Part1()
 				weight[1] = { triCross[2] / triArea };
 				weight[2] = { triCross[0] / triArea };
 
-				inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * weight[0] };
-				inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
-				inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * weight[2] };
+				//inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * weight[0] };
+				//inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
+				//inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * weight[2] };
 
-				float inerPolatWeight = { 1 / (inerPolat[0] + inerPolat[1] + inerPolat[2]) };
+				inerPolat[0] = { weight[0] / (vieuwVertices[0].position.z) };
+				inerPolat[1] = { weight[1] / (vieuwVertices[1].position.z) };
+				inerPolat[2] = { weight[2] / (vieuwVertices[2].position.z) };
+
+				float inerPolatWeight = { 1.f / (inerPolat[0] + inerPolat[1] + inerPolat[2]) };
 
 				int pIdx{ px + py * m_Width };
 
