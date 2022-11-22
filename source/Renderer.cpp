@@ -15,6 +15,7 @@ using namespace dae;
 
 //#define mainRender
 //#define BresenhamActive
+#define TriStrip
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -31,11 +32,14 @@ Renderer::Renderer(SDL_Window* pWindow) :
 
 	//Initialize Camera
 	m_Camera.Initialize(60.f, { .0f,.0f,-20.f });
+
+	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 }
 
 Renderer::~Renderer()
 {
 	delete[] m_pDepthBufferPixels;
+	delete m_pTexture;
 }
 
 void Renderer::Update(Timer* pTimer)
@@ -122,7 +126,7 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		projectedVertex.position.x = viewVertex.position.x / viewVertex.position.z;
 		projectedVertex.position.y = viewVertex.position.y / viewVertex.position.z;
-		projectedVertex.position.z = viewVertex.position.z;
+		projectedVertex.position.z = v.position.z;
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
 
@@ -133,6 +137,8 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		projectedVertex.position.x = projectedVertex.position.x * m_Width + m_Width / 2;
 		projectedVertex.position.y = projectedVertex.position.y * m_Height + m_Height / 2;
+
+		projectedVertex.uv = v.uv;
 
 		vertices_out.emplace_back(projectedVertex);
 	}
@@ -159,6 +165,130 @@ void dae::Renderer::Render_W1_Part1()
 	//	{{ -1.f, 0.f, 0.f}, colors::Red}
 	//};
 
+#ifdef TriStrip
+
+	std::vector<Mesh> Meshes = {
+		{
+			{
+				//vertexes
+				{
+					{-3.f, 3.f, -2.f},
+					{1},
+					{0.f,0.f}
+				},
+				{
+					{-0.f, 3.f, -2.f},
+					{1},
+					{0.5f,0.f}
+				},
+				{
+					{3.f, 3.f, -2.f},
+					{1},
+					{1.f,0.f}
+				},
+				{
+					{-3.f, 0.f, -2.f},
+					{1},
+					{0.f,0.5f}
+				},
+				{
+					{0.f, 0.f, -2.f},
+					{1},
+					{0.5f,0.5f}
+				},
+				{
+					{3.f, 0.f, -2.f},
+					{1},
+					{1.f,0.5f}
+				},
+				{
+					{-3.f, -3.f, -2.f},
+					{1},
+					{0.f,1.f}
+				},
+				{
+					{0.f, -3.f, -2.f},
+					{1},
+					{0.5f,1.f}
+				},
+				{
+					{3.f, -3.f, -2.f},
+					{1},
+					{1.f,1.f}
+				},
+			},
+			{
+				3,0,4,1,5,2,
+				2,6,
+				6,3,7,4,8,5
+			},
+			PrimitiveTopology::TriangleStrip
+		}
+	};
+
+#else
+
+
+	std::vector<Mesh> Meshes = {
+		{
+			{
+				//vertexes
+				{
+					{-3.f, 3.f, -2.f},
+					{1},
+					{0.f,0.f}
+				},
+				{
+					{-0.f, 3.f, -2.f},
+					{1},
+					{0.5f,0.f}
+				},
+				{
+					{3.f, 3.f, -2.f},
+					{1},
+					{1.f,0.f}
+				},
+				{
+					{-3.f, 0.f, -2.f},
+					{1},
+					{0.f,0.5f}
+				},
+				{
+					{0.f, 0.f, -2.f},
+					{1},
+					{0.5f,0.5f}
+				},
+				{
+					{3.f, 0.f, -2.f},
+					{1},
+					{1.f,0.5f}
+				},
+				{
+					{-3.f, -3.f, -2.f},
+					{1},
+					{0.f,1.f}
+				},
+				{
+					{0.f, -3.f, -2.f},
+					{1},
+					{0.5f,1.f}
+				},
+				{
+					{3.f, -3.f, -2.f},
+					{1},
+					{1.f,1.f}
+				},
+			},
+			{
+				3,0,1, 1,4,3, 4,1,2, /**/ 2,5,4, 6,3,4, 4,7,6, /**/ 7,4,5, 5,8,7
+			},
+			PrimitiveTopology::TriangleStrip
+		}
+	};
+
+
+#endif // TriStrip
+
 	std::vector<std::vector<Vertex>> Triangles
 	{
 		{
@@ -178,19 +308,72 @@ void dae::Renderer::Render_W1_Part1()
 	int pixelCount{m_Width*m_Height};
 	std::fill_n(m_pDepthBufferPixels, pixelCount, FLT_MAX);
 
-	for (auto& vertices_ndc : Triangles)
+	std::vector<uint32_t> indeces = Meshes[0].indices;
+	
+	//for (auto& vertices_ndc : Triangles)
+
+	int idx0{}, idx1{}, idx2{};
+
+	//std::vector<Vertex> worldVertices{ Meshes[0].vertices };
+	std::vector<Vertex> vieuwVertices0{};
+
+	VertexTransformationFunction(Meshes[0].vertices, vieuwVertices0);
+#ifdef TriStrip
+
+	for (int i = 0; i < indeces.size() - 2; i++)
 	{
 
-		std::vector<Vertex> worldVertices{ vertices_ndc };
-		std::vector<Vertex> vieuwVertices{};
+		idx0 = i;
 
-		VertexTransformationFunction(worldVertices, vieuwVertices);
+		if (!(i & 1))
+		{
+			idx1 = i + 1;
+			idx2 = i + 2;
+		}
+		else
+		{
+			idx1 = i + 2;
+			idx2 = i + 1;
+		}
+	//}
 
-		//for (auto& v : vieuwVertices)
+	//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
+	//{
+
+#else
+
+	for (int idx = 0; idx < indeces.size() - 1; idx += 3)
+	{
+		idx0 = i + 0;
+		idx1 = i + 1;
+		idx2 = i + 2;
+#endif // TriStrip
+		
+		//std::vector<Vertex> vertices_ndc
 		//{
-		//	v.position.x = v.position.x * m_Width + m_Width / 2;
-		//	v.position.y = v.position.y * m_Height + m_Height / 2;
-		//}
+		//	{Meshes[0].vertices[indeces[idx0]]},
+		//	{Meshes[0].vertices[indeces[idx1]]},
+		//	{Meshes[0].vertices[indeces[idx2]]}
+		//};
+
+		//std::vector<Vertex> worldVertices{ vertices_ndc };
+		//std::vector<Vertex> vieuwVertices{};
+
+		//VertexTransformationFunction(worldVertices, vieuwVertices);
+
+		std::vector<Vertex> vieuwVertices
+		{
+			{vieuwVertices0[indeces[idx0]]},
+			{vieuwVertices0[indeces[idx1]]},
+			{vieuwVertices0[indeces[idx2]]}
+		};
+
+		std::vector<Vertex> vieuwVertices2
+		{
+			{vieuwVertices0[indeces[i + 0]]},
+			{vieuwVertices0[indeces[i + 1]]},
+			{vieuwVertices0[indeces[i + 2]]}
+		};
 
 		std::vector<Vector2> tri
 		{
@@ -340,16 +523,14 @@ void dae::Renderer::Render_W1_Part1()
 				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
 				triCross[2] = { Vector2::Cross(Edges[2], TriToPix[2]) };
 
-				//UV[0] = { weight[0] * (vieuwVertices[0].color / vieuwVertices[0].position.z)};
-
 				//Texture
 
 				if ((triCross[0] > 0 || triCross[1] >= 0 || triCross[2] >= 0))
 					continue;
 
-				weight[0] = { triCross[0] / triArea };
-				weight[1] = { triCross[1] / triArea };
-				weight[2] = { triCross[2] / triArea };
+				weight[0] = { triCross[1] / triArea };
+				weight[1] = { triCross[2] / triArea };
+				weight[2] = { triCross[0] / triArea };
 
 				inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * weight[0] };
 				inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * weight[1] };
@@ -364,7 +545,26 @@ void dae::Renderer::Render_W1_Part1()
 
 				m_pDepthBufferPixels[pIdx] = inerPolatWeight;
 
-				ColorRGB finalColor{ vertices_ndc[0].color * weight[0] + vertices_ndc[1].color * weight[1] + vertices_ndc[2].color * weight[2] };
+				//-------------------------
+
+				//UV[0] = { weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
+				//UV[1] = { weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
+				//UV[2] = { weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
+
+				UV[0] = { weight[0] * (vieuwVertices[0].uv / vieuwVertices2[0].position.z) };
+				UV[1] = { weight[1] * (vieuwVertices[1].uv / vieuwVertices2[1].position.z) };
+				UV[2] = { weight[2] * (vieuwVertices[2].uv / vieuwVertices2[2].position.z) };
+
+				Vector2 fullUV = { (UV[0] + UV[1] + UV[2]) * inerPolatWeight };
+
+				ColorRGB finalColor
+				{
+					m_pTexture->Sample(fullUV)
+				};
+
+				//-------------------------
+
+				//ColorRGB finalColor{ vertices_ndc[0].color * weight[0] + vertices_ndc[1].color * weight[1] + vertices_ndc[2].color * weight[2] };
 
 					//gradient = 1;
 					//gradient += 1;

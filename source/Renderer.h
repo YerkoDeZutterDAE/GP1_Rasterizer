@@ -47,6 +47,8 @@ namespace dae
 		SDL_Surface* m_pBackBuffer{ nullptr };
 		uint32_t* m_pBackBufferPixels{};
 
+		Texture* m_pTexture{nullptr};
+
 		float* m_pDepthBufferPixels{};
 
 		Camera m_Camera{ {0.f,0.f,-10.f}, 60.f };
