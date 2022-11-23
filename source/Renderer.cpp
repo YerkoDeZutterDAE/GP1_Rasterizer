@@ -111,9 +111,6 @@ void Renderer::Render()
 
 void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const
 {
-	//Todo > W1 Projection Stage
-
-	//float perspectiveDevide{};
 
 	for (auto v : vertices_in)
 	{
@@ -122,14 +119,12 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		v.position = m_Camera.GetLookatVector(v.position);
 
-		projectedVertex.position.x = v.position.x / v.position.z;
-		projectedVertex.position.y = v.position.y / v.position.z;
-		projectedVertex.position.z = v.position.z;
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
 
-		projectedVertex.position.x = projectedVertex.position.x / (aspec * m_Camera.fov);
-		projectedVertex.position.y = projectedVertex.position.y / m_Camera.fov;
+		projectedVertex.position.x = v.position.x / (aspec * m_Camera.fov) / v.position.z;
+		projectedVertex.position.y = v.position.y / m_Camera.fov / v.position.z;
+		projectedVertex.position.z = v.position.z;
 
 		//-----------------------------------------------------------
 
@@ -151,12 +146,6 @@ bool Renderer::SaveBufferToImage() const
 
 void dae::Renderer::Render_W1_Part1()
 {
-	/*{ {0.f, .5f, 1.f}, colors::White},
-	{ {.5f, -.5f, 1.f}, colors::White },
-	{ { -.5f, -.5f, 1.f}, colors::White }*/
-	//Define Tri - Vertices in NDC space
-	
-	//-----------------
 
 	//std::vector<Vertex> vertices_ndc
 	//{
@@ -280,7 +269,9 @@ void dae::Renderer::Render_W1_Part1()
 				},
 			},
 			{
-				3,0,1, 1,4,3, 4,1,2, /**/ 2,5,4, 6,3,4, 4,7,6, /**/ 7,4,5, 5,8,7
+				3,0,1, 1,4,3, 4,1,2, 
+				2,5,4, 6,3,4, 4,7,6,
+				7,4,5, 5,8,7
 			},
 			PrimitiveTopology::TriangleStrip
 		}
@@ -314,10 +305,9 @@ void dae::Renderer::Render_W1_Part1()
 
 	int idx0{}, idx1{}, idx2{};
 
-	//std::vector<Vertex> worldVertices{ Meshes[0].vertices };
-	std::vector<Vertex> vieuwVertices0{};
+	std::vector<Vertex> allVieuwVertices{};
+	VertexTransformationFunction(Meshes[0].vertices, allVieuwVertices);
 
-	VertexTransformationFunction(Meshes[0].vertices, vieuwVertices0);
 #ifdef TriStrip
 
 	for (int i = 0; i < indeces.size() - 2; i++)
@@ -356,23 +346,18 @@ void dae::Renderer::Render_W1_Part1()
 		//	{Meshes[0].vertices[indeces[idx2]]}
 		//};
 
-		//std::vector<Vertex> worldVertices{ vertices_ndc };
-		//std::vector<Vertex> vieuwVertices{};
-
-		//VertexTransformationFunction(worldVertices, vieuwVertices);
-
 		std::vector<Vertex> vieuwVertices
 		{
-			{vieuwVertices0[indeces[idx0]]},
-			{vieuwVertices0[indeces[idx1]]},
-			{vieuwVertices0[indeces[idx2]]}
+			{allVieuwVertices[indeces[idx0]]},
+			{allVieuwVertices[indeces[idx1]]},
+			{allVieuwVertices[indeces[idx2]]}
 		};
 
 		std::vector<Vertex> vieuwVertices2
 		{
-			{vieuwVertices0[indeces[i + 0]]},
-			{vieuwVertices0[indeces[i + 1]]},
-			{vieuwVertices0[indeces[i + 2]]}
+			{allVieuwVertices[indeces[i + 0]]},
+			{allVieuwVertices[indeces[i + 1]]},
+			{allVieuwVertices[indeces[i + 2]]}
 		};
 
 		std::vector<Vector2> tri

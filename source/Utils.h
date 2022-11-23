@@ -175,31 +175,14 @@ namespace dae
 #pragma warning(pop)
 		void Bresenham(const Vector2& p1, const Vector2& p2, const ColorRGB& color1, const ColorRGB& color2, std::vector<Vector2>& outputY, std::vector<std::vector<dae::ColorRGB>>& outputColors)
 		{
-			//output.clear();
-			//int m_new = 2 * (p2.y - p1.y);
-			//int slope_error_new = m_new - (p2.x - p1.x);
-
-			//for (int x = p1.x, y = p1.y; x <= p2.x; x++)
-			//{
-			//	output.push_back(Vector2{float(x),float(y)});
-			//	//std::cout << x << ", " << y << std::endl;
-
-			//	slope_error_new += m_new;
-
-			//	if (slope_error_new >= 0)
-			//	{
-			//		y++;
-			//		slope_error_new -= 2 * (p2.x - p1.x);
-			//	}
-			//}
 
 			ColorRGB c1 = color1;
 			ColorRGB c2 = color2;
 
-			int x1 = p1.x;
-			int x2 = p2.x;
-			int y1 = p1.y;
-			int y2 = p2.y;
+			int x1 = static_cast<int>(p1.x);
+			int x2 = static_cast<int>(p2.x);
+			int y1 = static_cast<int>(p1.y);
+			int y2 = static_cast<int>(p2.y);
 
 			int dx = abs(x2 - x1);
 			int dy = abs(y2 - y1);
@@ -208,13 +191,10 @@ namespace dae
 			if (!(dx > dy))
 			{
 
-				//c1 = color2;
-				//c2 = color1;
-
-				x1 = p1.y;
-				x2 = p2.y;
-				y1 = p1.x;
-				y2 = p2.x;
+				x1 = static_cast<int>(p1.y);
+				x2 = static_cast<int>(p2.y);
+				y1 = static_cast<int>(p1.x);
+				y2 = static_cast<int>(p2.x);
 
 				dx = abs(x2 - x1);
 				dy = abs(y2 - y1);
@@ -248,10 +228,6 @@ namespace dae
 							outputColors[x1][1] = pixColor;
 						}
 					}
-
-					//outputY[x1] = { float(std::min(int(outputY[x1].x), y1)), float(std::max(int(outputY[x1].y), y1)) };
-
-					//outputColors[x1][0] = ColorRGB{ 1,0,0 };
 				}
 				else
 				{
@@ -262,11 +238,8 @@ namespace dae
 						if (!outputColors[y1].size())
 							outputColors[y1].resize(2);
 
-						//ColorRGB pixColor{ (((dFull - i) / dFull) * c1) + (((i) / dFull) * c2) };
-
 						if (std::min(int(outputY[y1].x), x1) == x1)
 						{
-							//std::cout << pixColor.r << ", " << pixColor.g << ", " << pixColor.b << std::endl;
 							outputY[y1].x = (float)x1;
 							outputColors[y1][0] = pixColor;
 						}
@@ -276,12 +249,7 @@ namespace dae
 							outputColors[y1][1] = pixColor;
 						}
 					}
-
-					//outputY[y1] = { float(std::min(int(outputY[y1].x), x1)), float(std::max(int(outputY[y1].y), x1)) };
-
-					//outputColors[y1][0] = ColorRGB{ 1,0,0 };
 				}
-				//std::cout << x1 << ", " << y1 << std::endl;
 
 				x1 < x2 ? x1++ : x1--;
 				if (pk < 0)
