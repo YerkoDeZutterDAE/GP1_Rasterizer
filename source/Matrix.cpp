@@ -150,16 +150,16 @@ namespace dae {
 
 		Vector3 worldUp{ 0,1,0 };
 
-		forward;
-		Vector3 right = Vector3::Cross(up, forward);
+		Vector3 f = forward.Normalized();
+		Vector3 right = Vector3::Cross(worldUp, f);
 		right.Normalize();
-		Vector3 vieuwUp = Vector3::Cross(forward, right);
+		Vector3 vieuwUp = Vector3::Cross(f, right);
 		vieuwUp.Normalize();
 
 		Matrix rMatrix{
 			right,
-			up,
-			forward,
+			vieuwUp,
+			-f,
 			origin };
 
 		return { rMatrix };

@@ -109,34 +109,73 @@ void Renderer::Render()
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
-void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const
+void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex_Out>& vertices_out) const
 {
-
+	vertices_out.reserve(vertices_in.size());
 	for (auto v : vertices_in)
 	{
 		Vertex viewVertex{};
 		Vertex projectedVertex{};
 
-		v.position = m_Camera.GetLookatVector(v.position);
+		//v.position = m_Camera.GetLookatVector(v.position);
+		v.position = m_Camera.invViewMatrix.TransformPoint(v.position);
 
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
 
-		projectedVertex.position.x = v.position.x / (aspec * m_Camera.fov) / v.position.z;
-		projectedVertex.position.y = v.position.y / m_Camera.fov / v.position.z;
-		projectedVertex.position.z = v.position.z;
+		v.position.x = v.position.x / (aspec * m_Camera.fov) / v.position.z;
+		v.position.y = v.position.y / m_Camera.fov / v.position.z;
+		v.position.z = v.position.z;
 
 		//-----------------------------------------------------------
 
 		projectedVertex.color = v.color;
 
-		projectedVertex.position.x = projectedVertex.position.x * m_Width + m_Width / 2;
-		projectedVertex.position.y = projectedVertex.position.y * m_Height + m_Height / 2;
+		v.position.x = v.position.x * m_Width + m_Width / 2;
+		v.position.y = v.position.y * m_Height + m_Height / 2;
+		//
+		//v.position.x = (v.position.x + 1.f) * 0.5f * m_Width;
+		//v.position.y = (1.f - v.position.y) * 0.5f * m_Height;
+
+
 
 		projectedVertex.uv = v.uv;
 
-		vertices_out.emplace_back(projectedVertex);
+		Vector4 pos = { v.position.x, v.position.y, v.position.z, 0 };
+
+		Vertex_Out out = Vertex_Out{ pos, v.color, v.uv, v.normal };
+
+		vertices_out.emplace_back(out);
 	}
+	//vertices_out.reserve();
+
+	//--------------------------------------------------------------------
+
+	//std::vector<Vertex> ndcVertices{};
+	////ndcVertices.reserve(ndcVertices.size());
+	//for (Vertex vertex : vertices_in)
+	//{
+	//	float aspec{ (float(m_Width) / float(m_Height)) };
+
+	//	vertex.position = m_Camera.viewMatrix.TransformPoint(vertex.position);
+
+	//	vertex.position.x = vertex.position.x / (aspec * m_Camera.fov) / vertex.position.z;
+	//	vertex.position.y = vertex.position.y / m_Camera.fov / vertex.position.z;
+
+	//	ndcVertices.push_back(vertex);
+	//}
+
+
+	////vertices_out.reserve(ndcVertices.size());
+
+	//for (Vertex vertex : ndcVertices)
+	//{
+
+	//	vertex.position.x = vertex.position.x * m_Width + m_Width / 2;
+	//	vertex.position.y = vertex.position.y * m_Height + m_Height / 2;
+
+	//	vertices_out.push_back(vertex);
+	//}
 }
 
 bool Renderer::SaveBufferToImage() const
@@ -305,7 +344,7 @@ void dae::Renderer::Render_W1_Part1()
 
 	int idx0{}, idx1{}, idx2{};
 
-	std::vector<Vertex> allVieuwVertices{};
+	std::vector<Vertex_Out> allVieuwVertices{};
 	VertexTransformationFunction(Meshes[0].vertices, allVieuwVertices);
 
 #ifdef TriStrip
@@ -339,6 +378,8 @@ void dae::Renderer::Render_W1_Part1()
 		idx2 = i + 2;
 #endif // TriStrip
 		
+
+
 		//std::vector<Vertex> vertices_ndc
 		//{
 		//	{Meshes[0].vertices[indeces[idx0]]},
@@ -346,18 +387,25 @@ void dae::Renderer::Render_W1_Part1()
 		//	{Meshes[0].vertices[indeces[idx2]]}
 		//};
 
-		std::vector<Vertex> vieuwVertices
+		std::vector<Vertex_Out> vieuwVertices
 		{
 			{allVieuwVertices[indeces[idx0]]},
 			{allVieuwVertices[indeces[idx1]]},
 			{allVieuwVertices[indeces[idx2]]}
 		};
 
-		std::vector<Vertex> vieuwVertices2
+		//std::vector<Vertex> vieuwVertices2
+		//{
+		//	{allVieuwVertices[indeces[i + 0]]},
+		//	{allVieuwVertices[indeces[i + 1]]},
+		//	{allVieuwVertices[indeces[i + 2]]}
+		//};
+
+		std::vector<Vertex_Out> vieuwVertices2
 		{
-			{allVieuwVertices[indeces[i + 0]]},
-			{allVieuwVertices[indeces[i + 1]]},
-			{allVieuwVertices[indeces[i + 2]]}
+			{allVieuwVertices[indeces[idx0]]},
+			{allVieuwVertices[indeces[idx1]]},
+			{allVieuwVertices[indeces[idx2]]}
 		};
 
 		std::vector<Vector2> tri
@@ -499,6 +547,15 @@ void dae::Renderer::Render_W1_Part1()
 
 				if (px < BoundBoxMin.x || px > BoundBoxMax.x || py < BoundBoxMin.y || py > BoundBoxMax.y)
 					continue;
+
+				if (m_RenderHitBox)
+				{
+					m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+						static_cast<uint8_t>(1 * 255),
+						static_cast<uint8_t>(1 * 255),
+						static_cast<uint8_t>(1 * 255));
+					continue;
+				}
 
 				TriToPix[0] = { screenPix - tri[0] };
 				TriToPix[1] = { screenPix - tri[1] };

@@ -63,6 +63,26 @@ int main(int argc, char* args[])
 			case SDL_KEYUP:
 				if (e.key.keysym.scancode == SDL_SCANCODE_X)
 					takeScreenshot = true;
+
+				//--------- Key Presses ---------
+
+				switch (e.key.keysym.scancode)
+				{
+				case SDL_SCANCODE_F4:
+					pRenderer->RenderHitBox();
+					break;
+				case SDL_SCANCODE_F5:
+					pRenderer->ToggleRotation();
+					break;
+				case SDL_SCANCODE_F6:
+					pRenderer->ToggleNormalMap();
+					break;
+				case SDL_SCANCODE_F7:
+					pRenderer->CycleShadingMode();
+					break;
+				default:
+					break;
+				}
 				break;
 			}
 		}

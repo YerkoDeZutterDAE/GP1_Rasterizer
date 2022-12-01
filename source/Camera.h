@@ -6,6 +6,8 @@
 #include "Math.h"
 #include "Timer.h"
 
+#include <iostream>
+
 namespace dae
 {
 	struct Camera
@@ -28,7 +30,7 @@ namespace dae
 		Vector3 right{Vector3::UnitX};
 
 		float totalPitch{};
-		float totalYaw{};
+		float totalYaw{160};
 
 		Matrix invViewMatrix{};
 		Matrix viewMatrix{};
@@ -49,9 +51,10 @@ namespace dae
 			//ONB => invViewMatrix
 			//Inverse(ONB) => ViewMatrix
 
-
+			//viewMatrix
 			viewMatrix = Matrix::CreateLookAtLH(origin, forward, { 0,1,0 });
-			invViewMatrix = { -viewMatrix.GetAxisX(), -viewMatrix.GetAxisY(), -viewMatrix.GetAxisZ(), -viewMatrix.GetTranslation() };
+			//invViewMatrix = { -viewMatrix.GetAxisX(), -viewMatrix.GetAxisY(), -viewMatrix.GetAxisZ(), -viewMatrix.GetTranslation() };
+			invViewMatrix = viewMatrix.Inverse();
 
 			//ViewMatrix => Matrix::CreateLookAtLH(...) [not implemented yet]
 			//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixlookatlh
@@ -98,18 +101,18 @@ namespace dae
 			}
 			if (pKeyboardState[SDL_SCANCODE_A])
 			{
-				origin -= right * deltaTime * moveSpeed;
+				origin += right * deltaTime * moveSpeed;
 			}
 			if (pKeyboardState[SDL_SCANCODE_D])
 			{
-				origin += right * deltaTime * moveSpeed;
+				origin -= right * deltaTime * moveSpeed;
 			}
 
 			if (mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
 				origin += forward * (mouseY * -0.01f) * moveSpeed;
 
-				totalPitch += mouseX;
+				totalPitch -= mouseX;
 
 				forward.y = cos(totalYaw * 0.01f);
 				forward.z = sin(totalYaw * 0.01f);
@@ -123,7 +126,7 @@ namespace dae
 			{
 				origin += up * (mouseY * -0.01f) * moveSpeed;
 
-				totalYaw += mouseX;
+				totalYaw -= mouseX;
 
 				forward.y = cos(totalYaw * 0.01f);
 				forward.z = sin(totalYaw * 0.01f);
@@ -135,7 +138,7 @@ namespace dae
 			}
 			else if (mouseState == SDL_BUTTON(SDL_BUTTON_RIGHT))
 			{
-				totalPitch += mouseX;
+				totalPitch -= mouseX;
 				totalYaw += mouseY;
 
 				forward.y = cos(totalYaw * 0.01f);

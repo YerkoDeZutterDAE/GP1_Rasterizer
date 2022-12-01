@@ -6,6 +6,8 @@
 #include "Camera.h"
 #include "DataTypes.h"
 
+#include <iostream>
+
 struct SDL_Window;
 struct SDL_Surface;
 
@@ -40,6 +42,15 @@ namespace dae
 		void Render_W1_Part4(); //Depth Buffer
 		void Render_W1_Part5(); //Boundingbox Optimization
 
+		//Button Press Events
+		void RenderHitBox() { m_RenderHitBox = !m_RenderHitBox; std::cout << "Test HitBox Render" << std::endl; };
+		void ToggleRotation() { m_RenderRotation = !m_RenderRotation; std::cout << "Test rotation Toggle" << std::endl; };
+		void ToggleNormalMap() { m_RenderNormalMap = !m_RenderNormalMap; std::cout << "Test normalMap Toggle" << std::endl; };
+		void CycleShadingMode() 
+		{ 
+			std::cout << "Test rotation Toggle" << std::endl;
+		};
+
 	private:
 		SDL_Window* m_pWindow{};
 
@@ -56,7 +67,13 @@ namespace dae
 		int m_Width{};
 		int m_Height{};
 
+
+		//Button Press Events
+		bool m_RenderHitBox{false};
+		bool m_RenderRotation{false};
+		bool m_RenderNormalMap{false};
+
 		//Function that transforms the vertices from the mesh from World space to Screen space
-		void VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const; //W1 Version
+		void VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex_Out>& vertices_out) const; //W1 Version
 	};
 }
