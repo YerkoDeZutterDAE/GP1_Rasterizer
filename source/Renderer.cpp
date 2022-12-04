@@ -15,8 +15,8 @@ using namespace dae;
 
 //#define mainRender
 //#define BresenhamActive
-//#define TriStrip
-#define OBJ
+#define TriStrip
+//#define OBJ
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -353,6 +353,62 @@ void dae::Renderer::Render_W1_Part1()
 	std::vector<Vertex_Out> allVieuwVertices{};
 	VertexTransformationFunction(Meshes[0].vertices, allVieuwVertices);
 
+	std::vector<Vector2> TriToPix
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<Vector2> Edges
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<float> triCross
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<float> weight
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<float> inerPolat
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<Vector2> UV
+	{
+		{},
+		{},
+		{}
+	};		
+	
+	std::vector<Vertex_Out> vieuwVertices
+	{
+		{},
+		{},
+		{}
+	};
+
+	std::vector<Vector2> tri
+	{
+		{},
+		{},
+		{}
+	};
+
 #ifdef TriStrip
 
 	for (int i = 0; i < indeces.size() - 2; i++)
@@ -415,19 +471,13 @@ void dae::Renderer::Render_W1_Part1()
 		//	{Meshes[0].vertices[indeces[idx2]]}
 		//};
 
-		std::vector<Vertex_Out> vieuwVertices
-		{
-			{allVieuwVertices[indeces[idx0]]},
-			{allVieuwVertices[indeces[idx1]]},
-			{allVieuwVertices[indeces[idx2]]}
-		};
+		vieuwVertices[0] = { allVieuwVertices[indeces[idx0]] };
+		vieuwVertices[1] = { allVieuwVertices[indeces[idx1]] };
+		vieuwVertices[2] = { allVieuwVertices[indeces[idx2]] };
 
-		std::vector<Vector2> tri
-		{
-		Vector2{vieuwVertices[0].position.x, vieuwVertices[0].position.y},
-		Vector2{vieuwVertices[1].position.x, vieuwVertices[1].position.y},
-		Vector2{vieuwVertices[2].position.x, vieuwVertices[2].position.y},
-		};
+		tri[0] = Vector2{ vieuwVertices[0].position.x, vieuwVertices[0].position.y };
+			tri[1] = Vector2{ vieuwVertices[1].position.x, vieuwVertices[1].position.y };
+			tri[2] = Vector2{ vieuwVertices[2].position.x, vieuwVertices[2].position.y };
 
 #ifdef BresenhamActive
 
@@ -459,48 +509,6 @@ void dae::Renderer::Render_W1_Part1()
 		Utils::Bresenham(tri[0], tri[2], vertices_ndc[0].color, vertices_ndc[2].color, yPixels, edgeColors);
 
 #else
-
-		std::vector<Vector2> TriToPix
-		{
-			{},
-			{},
-			{}
-		};
-
-		std::vector<Vector2> Edges
-		{
-			{},
-			{},
-			{}
-		};
-
-		std::vector<float> triCross
-		{
-			{},
-			{},
-			{}
-		};
-
-		std::vector<float> weight
-		{
-			{},
-			{},
-			{}
-		};
-
-		std::vector<float> inerPolat
-		{
-			{},
-			{},
-			{}
-		};
-
-		std::vector<Vector2> UV
-		{
-			{},
-			{},
-			{}
-		};
 
 
 
