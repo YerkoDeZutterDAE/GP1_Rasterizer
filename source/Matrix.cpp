@@ -142,15 +142,15 @@ namespace dae {
 		return out;
 	}
 
-	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& up)
+	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& worldUp)
 	{
 		//TODO W1
 
 
 
-		Vector3 worldUp{ 0,1,0 };
+		//Vector3 worldUp{ 0,1,0 };
 
-		Vector3 f = forward.Normalized();
+		Vector3 f = forward;
 		Vector3 right = Vector3::Cross(worldUp, f);
 		right.Normalize();
 		Vector3 vieuwUp = Vector3::Cross(f, right);
@@ -158,9 +158,9 @@ namespace dae {
 
 		Matrix rMatrix{
 			right,
-			vieuwUp,
-			-f,
-			origin };
+			-vieuwUp,
+			f,
+			{origin.x, origin.y, origin.z} };
 
 		return { rMatrix };
 	}

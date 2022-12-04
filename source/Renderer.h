@@ -42,6 +42,7 @@ namespace dae
 		void Render_W1_Part4(); //Depth Buffer
 		void Render_W1_Part5(); //Boundingbox Optimization
 
+
 		//Button Press Events
 		void RenderHitBox() { m_RenderHitBox = !m_RenderHitBox; std::cout << "Test HitBox Render" << std::endl; };
 		void ToggleRotation() { m_RenderRotation = !m_RenderRotation; std::cout << "Test rotation Toggle" << std::endl; };

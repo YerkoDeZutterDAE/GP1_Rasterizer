@@ -114,11 +114,9 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 	vertices_out.reserve(vertices_in.size());
 	for (auto v : vertices_in)
 	{
-		Vertex viewVertex{};
-		Vertex projectedVertex{};
 
 		//v.position = m_Camera.GetLookatVector(v.position);
-		v.position = m_Camera.invViewMatrix.TransformPoint(v.position);
+		v.position = m_Camera.invViewMatrix.TransformPoint({ v.position.x, v.position.y, v.position.z });
 
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
@@ -129,8 +127,6 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		//-----------------------------------------------------------
 
-		projectedVertex.color = v.color;
-
 		v.position.x = v.position.x * m_Width + m_Width / 2;
 		v.position.y = v.position.y * m_Height + m_Height / 2;
 		//
@@ -138,8 +134,6 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 		//v.position.y = (1.f - v.position.y) * 0.5f * m_Height;
 
 
-
-		projectedVertex.uv = v.uv;
 
 		Vector4 pos = { v.position.x, v.position.y, v.position.z, 0 };
 
@@ -394,19 +388,19 @@ void dae::Renderer::Render_W1_Part1()
 			{allVieuwVertices[indeces[idx2]]}
 		};
 
-		//std::vector<Vertex> vieuwVertices2
+		//std::vector<Vertex_Out> vieuwVertices2
 		//{
 		//	{allVieuwVertices[indeces[i + 0]]},
 		//	{allVieuwVertices[indeces[i + 1]]},
 		//	{allVieuwVertices[indeces[i + 2]]}
 		//};
 
-		std::vector<Vertex_Out> vieuwVertices2
-		{
-			{allVieuwVertices[indeces[idx0]]},
-			{allVieuwVertices[indeces[idx1]]},
-			{allVieuwVertices[indeces[idx2]]}
-		};
+		//std::vector<Vertex_Out> vieuwVertices2
+		//{
+		//	{allVieuwVertices[indeces[idx0]]},
+		//	{allVieuwVertices[indeces[idx1]]},
+		//	{allVieuwVertices[indeces[idx2]]}
+		//};
 
 		std::vector<Vector2> tri
 		{
@@ -557,9 +551,13 @@ void dae::Renderer::Render_W1_Part1()
 					continue;
 				}
 
-				TriToPix[0] = { screenPix - tri[0] };
-				TriToPix[1] = { screenPix - tri[1] };
-				TriToPix[2] = { screenPix - tri[2] };
+				//TriToPix[0] = { screenPix - tri[0] };
+				//TriToPix[1] = { screenPix - tri[1] };
+				//TriToPix[2] = { screenPix - tri[2] };
+
+				TriToPix[0] = { tri[0] - screenPix };
+				TriToPix[1] = { tri[1] - screenPix };
+				TriToPix[2] = { tri[2] - screenPix };
 
 				triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
 				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
@@ -597,9 +595,9 @@ void dae::Renderer::Render_W1_Part1()
 				//UV[1] = { weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
 				//UV[2] = { weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
 
-				UV[0] = { weight[0] * (vieuwVertices[0].uv / vieuwVertices2[0].position.z) };
-				UV[1] = { weight[1] * (vieuwVertices[1].uv / vieuwVertices2[1].position.z) };
-				UV[2] = { weight[2] * (vieuwVertices[2].uv / vieuwVertices2[2].position.z) };
+				UV[0] = { weight[0] * (vieuwVertices[0].uv / vieuwVertices[0].position.z) };
+				UV[1] = { weight[1] * (vieuwVertices[1].uv / vieuwVertices[1].position.z) };
+				UV[2] = { weight[2] * (vieuwVertices[2].uv / vieuwVertices[2].position.z) };
 
 				Vector2 fullUV = { (UV[0] + UV[1] + UV[2]) * inerPolatWeight };
 

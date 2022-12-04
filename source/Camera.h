@@ -35,6 +35,10 @@ namespace dae
 		Matrix invViewMatrix{};
 		Matrix viewMatrix{};
 
+		// z axis space limits
+		float tmin{0.1f};
+		float tmax{100.f};
+
 		float moveSpeed{ 1.f };
 
 		void Initialize(float _fovAngle = 90.f, Vector3 _origin = {0.f,0.f,0.f})
@@ -52,9 +56,13 @@ namespace dae
 			//Inverse(ONB) => ViewMatrix
 
 			//viewMatrix
-			viewMatrix = Matrix::CreateLookAtLH(origin, forward, { 0,1,0 });
-			//invViewMatrix = { -viewMatrix.GetAxisX(), -viewMatrix.GetAxisY(), -viewMatrix.GetAxisZ(), -viewMatrix.GetTranslation() };
-			invViewMatrix = viewMatrix.Inverse();
+			
+			//viewMatrix = Matrix::CreateLookAtLH(origin, forward, { 0,1,0 });
+			////invViewMatrix = { -viewMatrix.GetAxisX(), -viewMatrix.GetAxisY(), -viewMatrix.GetAxisZ(), -viewMatrix.GetTranslation() };
+			//invViewMatrix = viewMatrix.Inverse();
+
+			invViewMatrix = Matrix::CreateLookAtLH(origin, forward, { 0,1,0 });
+			viewMatrix = invViewMatrix.Inverse();
 
 			//ViewMatrix => Matrix::CreateLookAtLH(...) [not implemented yet]
 			//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixlookatlh
@@ -101,18 +109,18 @@ namespace dae
 			}
 			if (pKeyboardState[SDL_SCANCODE_A])
 			{
-				origin += right * deltaTime * moveSpeed;
+				origin -= right * deltaTime * moveSpeed;
 			}
 			if (pKeyboardState[SDL_SCANCODE_D])
 			{
-				origin -= right * deltaTime * moveSpeed;
+				origin += right * deltaTime * moveSpeed;
 			}
 
 			if (mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
 				origin += forward * (mouseY * -0.01f) * moveSpeed;
 
-				totalPitch -= mouseX;
+				totalPitch += mouseX;
 
 				forward.y = cos(totalYaw * 0.01f);
 				forward.z = sin(totalYaw * 0.01f);
@@ -138,7 +146,7 @@ namespace dae
 			}
 			else if (mouseState == SDL_BUTTON(SDL_BUTTON_RIGHT))
 			{
-				totalPitch -= mouseX;
+				totalPitch += mouseX;
 				totalYaw += mouseY;
 
 				forward.y = cos(totalYaw * 0.01f);
