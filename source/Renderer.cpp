@@ -514,7 +514,7 @@ void dae::Renderer::Render_W1_Part1()
 		Vector2 BoundBoxMin = {Vector2::min(tri[0], Vector2::min(tri[1],tri[2]))};
 		Vector2 BoundBoxMax = {Vector2::max(tri[0], Vector2::max(tri[1],tri[2]))};
 
-		if (0 >= BoundBoxMin.x || 0 >= BoundBoxMin.y || m_Width - 1 <= BoundBoxMin.x || m_Height - 1 <= BoundBoxMin.y)
+		if (0 >= BoundBoxMin.x || 0 >= BoundBoxMin.y || m_Width <= BoundBoxMax.x || m_Height <= BoundBoxMax.y)
 			continue;
 
 #endif // BresenhamActive
