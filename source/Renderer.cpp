@@ -15,7 +15,8 @@ using namespace dae;
 
 //#define mainRender
 //#define BresenhamActive
-#define TriStrip
+//#define TriStrip
+#define OBJ
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -33,7 +34,19 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	//Initialize Camera
 	m_Camera.Initialize(60.f, { .0f,.0f,-20.f });
 
+#ifdef TriStrip
+
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
+
+#elif defined(OBJ)
+	
+	m_pTexture = Texture::LoadFromFile("Resources/tuktuk.png");
+
+#else
+
+	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
+
+#endif // TriStrip
 }
 
 Renderer::~Renderer()
@@ -180,13 +193,6 @@ bool Renderer::SaveBufferToImage() const
 void dae::Renderer::Render_W1_Part1()
 {
 
-	//std::vector<Vertex> vertices_ndc
-	//{
-	//	{{0.f, 2.f, 0.f}, colors::Red},
-	//	{{1.f, 0.f, 0.f}, colors::Red},
-	//	{{ -1.f, 0.f, 0.f}, colors::Red}
-	//};
-
 #ifdef TriStrip
 
 	std::vector<Mesh> Meshes = {
@@ -247,6 +253,12 @@ void dae::Renderer::Render_W1_Part1()
 			PrimitiveTopology::TriangleStrip
 		}
 	};
+
+#elif defined(OBJ)
+
+	std::vector<Mesh> Meshes{ {} };
+
+	Utils::ParseOBJ("Resources/tuktuk.obj", Meshes[0].vertices,  Meshes[0].indices);
 
 #else
 
@@ -363,13 +375,35 @@ void dae::Renderer::Render_W1_Part1()
 	//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
 	//{
 
+#elif defined(OBJ)
+
+	for (int i = 0; i < indeces.size() - 2; i++)
+	{
+
+		idx0 = i;
+
+		if (!(i & 1))
+		{
+			idx1 = i + 1;
+			idx2 = i + 2;
+		}
+		else
+		{
+			idx1 = i + 2;
+			idx2 = i + 1;
+		}
+	//}
+
+	//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
+	//{
+
 #else
 
 	for (int idx = 0; idx < indeces.size() - 1; idx += 3)
 	{
-		idx0 = i + 0;
-		idx1 = i + 1;
-		idx2 = i + 2;
+		idx0 = idx + 0;
+		idx1 = idx + 1;
+		idx2 = idx + 2;
 #endif // TriStrip
 		
 
@@ -387,20 +421,6 @@ void dae::Renderer::Render_W1_Part1()
 			{allVieuwVertices[indeces[idx1]]},
 			{allVieuwVertices[indeces[idx2]]}
 		};
-
-		//std::vector<Vertex_Out> vieuwVertices2
-		//{
-		//	{allVieuwVertices[indeces[i + 0]]},
-		//	{allVieuwVertices[indeces[i + 1]]},
-		//	{allVieuwVertices[indeces[i + 2]]}
-		//};
-
-		//std::vector<Vertex_Out> vieuwVertices2
-		//{
-		//	{allVieuwVertices[indeces[idx0]]},
-		//	{allVieuwVertices[indeces[idx1]]},
-		//	{allVieuwVertices[indeces[idx2]]}
-		//};
 
 		std::vector<Vector2> tri
 		{
