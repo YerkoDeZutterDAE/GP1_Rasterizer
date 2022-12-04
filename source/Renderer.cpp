@@ -15,8 +15,8 @@ using namespace dae;
 
 //#define mainRender
 //#define BresenhamActive
-#define TriStrip
-//#define OBJ
+//#define TriStrip
+#define OBJ
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -32,7 +32,7 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pDepthBufferPixels = new float[m_Width * m_Height];
 
 	//Initialize Camera
-	m_Camera.Initialize(60.f, { .0f,.0f,-20.f });
+	m_Camera.Initialize(60.f, { .0f,5.0f,-25.f });
 
 #ifdef TriStrip
 
@@ -579,13 +579,13 @@ void dae::Renderer::Render_W1_Part1()
 					continue;
 				}
 
-				//TriToPix[0] = { screenPix - tri[0] };
-				//TriToPix[1] = { screenPix - tri[1] };
-				//TriToPix[2] = { screenPix - tri[2] };
+				TriToPix[0] = { screenPix - tri[0] };
+				TriToPix[1] = { screenPix - tri[1] };
+				TriToPix[2] = { screenPix - tri[2] };
 
-				TriToPix[0] = { tri[0] - screenPix };
-				TriToPix[1] = { tri[1] - screenPix };
-				TriToPix[2] = { tri[2] - screenPix };
+				//TriToPix[0] = { tri[0] - screenPix };
+				//TriToPix[1] = { tri[1] - screenPix };
+				//TriToPix[2] = { tri[2] - screenPix };
 
 				triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
 				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
@@ -593,7 +593,7 @@ void dae::Renderer::Render_W1_Part1()
 
 				//Texture
 
-				if ((triCross[0] > 0 || triCross[1] >= 0 || triCross[2] >= 0))
+				if ((triCross[0] > 0 || triCross[1] > 0 || triCross[2] > 0))
 					continue;
 
 				weight[0] = { triCross[1] / triArea };
