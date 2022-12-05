@@ -77,6 +77,7 @@ void Renderer::Render()
 
 void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex_Out>& vertices_out) const
 {
+	vertices_out = {};
 	vertices_out.reserve(vertices_in.size());
 	for (auto v : vertices_in)
 	{
