@@ -10,6 +10,7 @@
 #include "Utils.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace dae;
 
@@ -595,6 +596,7 @@ void dae::Renderer::Render_2()
 
 	for (int i = 0; i < m_Meshes[0].indices.size() - 2; i++)
 	{
+#ifdef TriStrip
 
 		idx0 = i;
 
@@ -608,6 +610,14 @@ void dae::Renderer::Render_2()
 			idx1 = i + 2;
 			idx2 = i + 1;
 		}
+
+#elif defined(OBJ)
+
+		idx0 = i;
+		idx1 = i + 1;
+		idx2 = i + 2;
+
+#endif // TriStrip
 
 		m_vieuwVertices[0] = { m_Vertex_Outs[m_Meshes[0].indices[idx0]] };
 		m_vieuwVertices[1] = { m_Vertex_Outs[m_Meshes[0].indices[idx1]] };
@@ -849,6 +859,9 @@ void dae::Renderer::RenderPix()
 
 			m_pDepthBufferPixels[pIdx] = inerPolatWeight;
 
+			if (BigestD < inerPolatWeight)
+				BigestD = inerPolatWeight;
+
 			//-------------------------
 
 			//m_UV[0] = { m_weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
@@ -875,6 +888,27 @@ void dae::Renderer::RenderPix()
 				static_cast<uint8_t>(finalColor.r * 255),
 				static_cast<uint8_t>(finalColor.g * 255),
 				static_cast<uint8_t>(finalColor.b * 255));
+
+
+
+
+
+
+			// DEPTH !!!!!!!! SET IN SWITCH LATER;
+
+			//float d = { -(1.0f / inerPolatWeight) * 10 };
+
+			//ColorRGB finalColor
+			//{
+			//	d, d, d
+			//};
+
+			//finalColor.MaxToOne();
+
+			//m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+			//	static_cast<uint8_t>(finalColor.r * 255),
+			//	static_cast<uint8_t>(finalColor.g * 255),
+			//	static_cast<uint8_t>(finalColor.b * 255));
 
 		}
 

@@ -71,6 +71,7 @@ namespace dae
 			Vector2 m_BoundBoxMax{};
 
 			float lastX{};
+			float BigestD{};
 
 		//END OF BIG CLEANUP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
