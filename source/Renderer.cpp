@@ -14,8 +14,8 @@
 using namespace dae;
 
 //#define BresenhamActive
-#define TriStrip
-//#define OBJ
+//#define TriStrip
+#define OBJ
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -779,9 +779,9 @@ void dae::Renderer::SetPositionInfo()
 
 void dae::Renderer::RenderPix()
 {
-	for (int px{}; px < m_Width; ++px)
+	for (int px{ static_cast<int>(m_BoundBoxMin.x) }; px < m_BoundBoxMax.x; ++px)
 	{
-		for (int py{}; py < m_Height; ++py)
+		for (int py{ static_cast<int>(m_BoundBoxMin.y) }; py < m_BoundBoxMax.y; ++py)
 		{
 			Vector2 screenPix{ float(px),float(py) };
 
@@ -801,19 +801,19 @@ void dae::Renderer::RenderPix()
 				continue;
 			}
 
-			//m_TriToPix[0] = { screenPix - m_tri[0] };
-			//m_TriToPix[1] = { screenPix - m_tri[1] };
-			//m_TriToPix[2] = { screenPix - m_tri[2] };
+			m_TriToPix[0] = { screenPix - m_tri[0] };
+			m_TriToPix[1] = { screenPix - m_tri[1] };
+			m_TriToPix[2] = { screenPix - m_tri[2] };
 
-			m_TriToPix[0] = { m_tri[0] - screenPix };
-			m_TriToPix[1] = { m_tri[1] - screenPix };
-			m_TriToPix[2] = { m_tri[2] - screenPix };
+			//m_TriToPix[0] = { m_tri[0] - screenPix };
+			//m_TriToPix[1] = { m_tri[1] - screenPix };
+			//m_TriToPix[2] = { m_tri[2] - screenPix };
 
-			if (lastX != m_tri[0].x)
-			{
-				//std::cout << m_tri[0].x << std::endl;
-				lastX = m_tri[0].x;
-			}
+			//if (lastX != m_tri[0].x)
+			//{
+			//	//std::cout << m_tri[0].x << std::endl;
+			//	lastX = m_tri[0].x;
+			//}
 
 			//m_TriToPix[0] = { m_tri[0] - screenPix };
 			//m_TriToPix[1] = { m_tri[1] - screenPix };
@@ -825,7 +825,7 @@ void dae::Renderer::RenderPix()
 
 			//Texture
 
-			if ((m_triCross[0] > 0 || m_triCross[1] > 0 || m_triCross[2] > 0))
+			if ((m_triCross[0] <= 0 || m_triCross[1] <= 0 || m_triCross[2] <= 0))
 				continue;
 
 			m_weight[0] = { m_triCross[1] / m_triArea };
