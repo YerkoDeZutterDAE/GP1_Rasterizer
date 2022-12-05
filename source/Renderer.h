@@ -36,11 +36,43 @@ namespace dae
 		bool SaveBufferToImage() const;
 
 		//Exersize Parts
-		void Render_W1_Part1(); //Rasterizer Stage Only
-		void Render_W1_Part2(); //Projection Stage (Camera)
-		void Render_W1_Part3(); //BarCentric Coordimates
-		void Render_W1_Part4(); //Depth Buffer
-		void Render_W1_Part5(); //Boundingbox Optimization
+		void Render_1();
+
+		// BIG CLEANUP FUNCTIONS AND VARS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+			// functions
+
+			void Render_2();
+
+			void SetPositionInfo();
+			void RenderPix();
+
+			// vars
+
+			std::vector<Mesh> m_Meshes{};
+			std::vector<Vertex_Out> m_Vertex_Outs{};
+
+			std::vector<Vector2> m_TriToPix			{	{},	{},	{}	};
+			std::vector<Vector2> m_Edges			{	{},	{},	{}	};
+			std::vector<float> m_triCross			{	{},	{},	{}	};
+			std::vector<float> m_weight				{	{},	{},	{}	};
+			std::vector<float> m_inerPolat			{	{},	{},	{}	};
+			std::vector<Vector2> m_UV				{	{},	{},	{}	};
+			std::vector<Vertex_Out> m_vieuwVertices	{	{},	{},	{}	};
+			std::vector<Vector2> m_tri				{	{},	{},	{}	};
+
+			int idx0;
+			int idx1;
+			int idx2;
+
+			float m_triArea{};
+
+			Vector2 m_BoundBoxMin{};
+			Vector2 m_BoundBoxMax{};
+
+			float lastX{};
+
+		//END OF BIG CLEANUP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 		//Button Press Events

@@ -13,10 +13,9 @@
 
 using namespace dae;
 
-//#define mainRender
 //#define BresenhamActive
-//#define TriStrip
-#define OBJ
+#define TriStrip
+//#define OBJ
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -32,7 +31,7 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pDepthBufferPixels = new float[m_Width * m_Height];
 
 	//Initialize Camera
-	m_Camera.Initialize(60.f, { .0f,5.0f,-25.f });
+	m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
 
 #ifdef TriStrip
 
@@ -66,54 +65,8 @@ void Renderer::Render()
 	//Lock BackBuffer
 	SDL_LockSurface(m_pBackBuffer);
 
-
-
-#ifdef mainRender
-
-	//Define Tri - Vertices in NDC space
-	std::vector<Vertex> vertices_ndc
-	{
-		{{0.f, .5f, 1.f}, colors::White},
-		{{.5f, -.5f, 1.f}, colors::White},
-		{{ - .5f, -.5f, 1.f}, colors::White}
-	};
-
-	std::vector<Vertex> worldVertices{ vertices_ndc };
-	std::vector<Vertex> vieuwVertices{};
-
-	VertexTransformationFunction(worldVertices, vieuwVertices);
-
-	//RENDER LOGIC
-	for (int px{}; px < m_Width; ++px)
-	{
-		for (int py{}; py < m_Height; ++py)
-		{
-			//Vector2 screenPix{px,py};
-
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
-
-			ColorRGB finalColor{ gradient, gradient, gradient };
-
-			//Update Color in Buffer
-			finalColor.MaxToOne();
-
-			m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
-		}
-	}
-
-#else
-	Render_W1_Part1(); //Rasterizer Stage Only
-	//Render_W1_Part2(); //Projection Stage (Camera)
-	//Render_W1_Part3(); //BarCentric Coordimates
-	//Render_W1_Part4(); //Depth Buffer
-	//Render_W1_Part5(); //Boundingbox Optimization
-
-#endif // mainRender
+	//Render_1();
+	Render_2();
 
 	//@END
 	//Update SDL Surface
@@ -128,8 +81,8 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 	for (auto v : vertices_in)
 	{
 
-		//v.position = m_Camera.GetLookatVector(v.position);
-		v.position = m_Camera.invViewMatrix.TransformPoint({ v.position.x, v.position.y, v.position.z });
+		//std::cout << v.position.x << std::endl;
+		v.position = m_Camera.invViewMatrix.TransformPoint(v.position);
 
 
 		float aspec{ (float(m_Width) / float(m_Height)) };
@@ -142,9 +95,6 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		v.position.x = v.position.x * m_Width + m_Width / 2;
 		v.position.y = v.position.y * m_Height + m_Height / 2;
-		//
-		//v.position.x = (v.position.x + 1.f) * 0.5f * m_Width;
-		//v.position.y = (1.f - v.position.y) * 0.5f * m_Height;
 
 
 
@@ -154,35 +104,6 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 
 		vertices_out.emplace_back(out);
 	}
-	//vertices_out.reserve();
-
-	//--------------------------------------------------------------------
-
-	//std::vector<Vertex> ndcVertices{};
-	////ndcVertices.reserve(ndcVertices.size());
-	//for (Vertex vertex : vertices_in)
-	//{
-	//	float aspec{ (float(m_Width) / float(m_Height)) };
-
-	//	vertex.position = m_Camera.viewMatrix.TransformPoint(vertex.position);
-
-	//	vertex.position.x = vertex.position.x / (aspec * m_Camera.fov) / vertex.position.z;
-	//	vertex.position.y = vertex.position.y / m_Camera.fov / vertex.position.z;
-
-	//	ndcVertices.push_back(vertex);
-	//}
-
-
-	////vertices_out.reserve(ndcVertices.size());
-
-	//for (Vertex vertex : ndcVertices)
-	//{
-
-	//	vertex.position.x = vertex.position.x * m_Width + m_Width / 2;
-	//	vertex.position.y = vertex.position.y * m_Height + m_Height / 2;
-
-	//	vertices_out.push_back(vertex);
-	//}
 }
 
 bool Renderer::SaveBufferToImage() const
@@ -190,7 +111,7 @@ bool Renderer::SaveBufferToImage() const
 	return SDL_SaveBMP(m_pBackBuffer, "Rasterizer_ColorBuffer.bmp");
 }
 
-void dae::Renderer::Render_W1_Part1()
+void dae::Renderer::Render_1()
 {
 
 #ifdef TriStrip
@@ -258,7 +179,7 @@ void dae::Renderer::Render_W1_Part1()
 
 	std::vector<Mesh> Meshes{ {} };
 
-	Utils::ParseOBJ("Resources/tuktuk.obj", Meshes[0].vertices,  Meshes[0].indices);
+	Utils::ParseOBJ("Resources/tuktuk.obj", Meshes[0].vertices, Meshes[0].indices);
 
 #else
 
@@ -314,7 +235,7 @@ void dae::Renderer::Render_W1_Part1()
 				},
 			},
 			{
-				3,0,1, 1,4,3, 4,1,2, 
+				3,0,1, 1,4,3, 4,1,2,
 				2,5,4, 6,3,4, 4,7,6,
 				7,4,5, 5,8,7
 			},
@@ -341,14 +262,14 @@ void dae::Renderer::Render_W1_Part1()
 
 	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
 
-	int pixelCount{m_Width*m_Height};
+	int pixelCount{ m_Width * m_Height };
 	std::fill_n(m_pDepthBufferPixels, pixelCount, FLT_MAX);
 
 	std::vector<uint32_t> indeces = Meshes[0].indices;
-	
+
 	//for (auto& vertices_ndc : Triangles)
 
-	int idx0{}, idx1{}, idx2{};
+	//int idx0{}, idx1{}, idx2{};
 
 	std::vector<Vertex_Out> allVieuwVertices{};
 	VertexTransformationFunction(Meshes[0].vertices, allVieuwVertices);
@@ -393,8 +314,8 @@ void dae::Renderer::Render_W1_Part1()
 		{},
 		{},
 		{}
-	};		
-	
+	};
+
 	std::vector<Vertex_Out> vieuwVertices
 	{
 		{},
@@ -426,10 +347,10 @@ void dae::Renderer::Render_W1_Part1()
 			idx1 = i + 2;
 			idx2 = i + 1;
 		}
-	//}
+		//}
 
-	//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
-	//{
+		//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
+		//{
 
 #elif defined(OBJ)
 
@@ -448,10 +369,10 @@ void dae::Renderer::Render_W1_Part1()
 			idx1 = i + 2;
 			idx2 = i + 1;
 		}
-	//}
+		//}
 
-	//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
-	//{
+		//for (int idx = 0; idx < indeces.size() - 1; idx += 3)
+		//{
 
 #else
 
@@ -461,7 +382,7 @@ void dae::Renderer::Render_W1_Part1()
 		idx1 = idx + 1;
 		idx2 = idx + 2;
 #endif // TriStrip
-		
+
 
 
 		//std::vector<Vertex> vertices_ndc
@@ -476,8 +397,8 @@ void dae::Renderer::Render_W1_Part1()
 		vieuwVertices[2] = { allVieuwVertices[indeces[idx2]] };
 
 		tri[0] = Vector2{ vieuwVertices[0].position.x, vieuwVertices[0].position.y };
-			tri[1] = Vector2{ vieuwVertices[1].position.x, vieuwVertices[1].position.y };
-			tri[2] = Vector2{ vieuwVertices[2].position.x, vieuwVertices[2].position.y };
+		tri[1] = Vector2{ vieuwVertices[1].position.x, vieuwVertices[1].position.y };
+		tri[2] = Vector2{ vieuwVertices[2].position.x, vieuwVertices[2].position.y };
 
 #ifdef BresenhamActive
 
@@ -519,8 +440,8 @@ void dae::Renderer::Render_W1_Part1()
 
 		float triArea{ Vector2::Cross(Edges[0], Edges[1]) };
 
-		Vector2 BoundBoxMin = {Vector2::min(tri[0], Vector2::min(tri[1],tri[2]))};
-		Vector2 BoundBoxMax = {Vector2::max(tri[0], Vector2::max(tri[1],tri[2]))};
+		Vector2 BoundBoxMin = { Vector2::min(tri[0], Vector2::min(tri[1],tri[2])) };
+		Vector2 BoundBoxMax = { Vector2::max(tri[0], Vector2::max(tri[1],tri[2])) };
 
 		if (0 >= BoundBoxMin.x || 0 >= BoundBoxMin.y || m_Width <= BoundBoxMax.x || m_Height <= BoundBoxMax.y)
 			continue;
@@ -579,13 +500,13 @@ void dae::Renderer::Render_W1_Part1()
 					continue;
 				}
 
-				TriToPix[0] = { screenPix - tri[0] };
-				TriToPix[1] = { screenPix - tri[1] };
-				TriToPix[2] = { screenPix - tri[2] };
+				//TriToPix[0] = { screenPix - tri[0] };
+				//TriToPix[1] = { screenPix - tri[1] };
+				//TriToPix[2] = { screenPix - tri[2] };
 
-				//TriToPix[0] = { tri[0] - screenPix };
-				//TriToPix[1] = { tri[1] - screenPix };
-				//TriToPix[2] = { tri[2] - screenPix };
+				TriToPix[0] = { tri[0] - screenPix };
+				TriToPix[1] = { tri[1] - screenPix };
+				TriToPix[2] = { tri[2] - screenPix };
 
 				triCross[0] = { Vector2::Cross(Edges[0], TriToPix[0]) };
 				triCross[1] = { Vector2::Cross(Edges[1], TriToPix[1]) };
@@ -657,18 +578,304 @@ void dae::Renderer::Render_W1_Part1()
 	}
 }
 
-void dae::Renderer::Render_W1_Part2()
+void dae::Renderer::Render_2()
 {
+	//Reset
+	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
+
+	int pixelCount{ m_Width * m_Height };
+	std::fill_n(m_pDepthBufferPixels, pixelCount, FLT_MAX);
+
+	//Reposition Points
+
+	SetPositionInfo();
+
+	//Render Pixel
+
+	for (int i = 0; i < m_Meshes[0].indices.size() - 2; i++)
+	{
+
+		idx0 = i;
+
+		if (!(i & 1))
+		{
+			idx1 = i + 1;
+			idx2 = i + 2;
+		}
+		else
+		{
+			idx1 = i + 2;
+			idx2 = i + 1;
+		}
+
+		m_vieuwVertices[0] = { m_Vertex_Outs[m_Meshes[0].indices[idx0]] };
+		m_vieuwVertices[1] = { m_Vertex_Outs[m_Meshes[0].indices[idx1]] };
+		m_vieuwVertices[2] = { m_Vertex_Outs[m_Meshes[0].indices[idx2]] };
+
+		m_tri[0] = Vector2{ m_vieuwVertices[0].position.x, m_vieuwVertices[0].position.y };
+		m_tri[1] = Vector2{ m_vieuwVertices[1].position.x, m_vieuwVertices[1].position.y };
+		m_tri[2] = Vector2{ m_vieuwVertices[2].position.x, m_vieuwVertices[2].position.y };
+
+		m_Edges[0] = { m_tri[1] - m_tri[0] };
+		m_Edges[1] = { m_tri[2] - m_tri[1] };
+		m_Edges[2] = { m_tri[0] - m_tri[2] };
+
+
+		m_triArea =  Vector2::Cross(m_Edges[0], m_Edges[1]) ;
+
+		m_BoundBoxMin = { Vector2::min(m_tri[0], Vector2::min(m_tri[1],m_tri[2])) };
+		m_BoundBoxMax = { Vector2::max(m_tri[0], Vector2::max(m_tri[1],m_tri[2])) };
+
+		if (0 >= m_BoundBoxMin.x || 0 >= m_BoundBoxMin.y || m_Width <= m_BoundBoxMax.x || m_Height <= m_BoundBoxMax.y)
+			continue;
+
+
+		RenderPix();
+	}
 }
 
-void dae::Renderer::Render_W1_Part3()
+void dae::Renderer::SetPositionInfo()
 {
+
+	//---------------------- Set Base Positions
+#ifdef OBJ
+
+	m_Meshes = { {} };
+
+	Utils::ParseOBJ("Resources/tuktuk.obj", m_Meshes[0].vertices, m_Meshes[0].indices);
+
+#elif defined(TriStrip)
+
+	m_Meshes = {
+		{
+			{
+				//vertexes
+				{
+					{-3.f, 3.f, -2.f},
+					{1},
+					{0.f,0.f}
+				},
+				{
+					{-0.f, 3.f, -2.f},
+					{1},
+					{0.5f,0.f}
+				},
+				{
+					{3.f, 3.f, -2.f},
+					{1},
+					{1.f,0.f}
+				},
+				{
+					{-3.f, 0.f, -2.f},
+					{1},
+					{0.f,0.5f}
+				},
+				{
+					{0.f, 0.f, -2.f},
+					{1},
+					{0.5f,0.5f}
+				},
+				{
+					{3.f, 0.f, -2.f},
+					{1},
+					{1.f,0.5f}
+				},
+				{
+					{-3.f, -3.f, -2.f},
+					{1},
+					{0.f,1.f}
+				},
+				{
+					{0.f, -3.f, -2.f},
+					{1},
+					{0.5f,1.f}
+				},
+				{
+					{3.f, -3.f, -2.f},
+					{1},
+					{1.f,1.f}
+				},
+			},
+			{
+				3,0,4,1,5,2,
+				2,6,
+				6,3,7,4,8,5
+			},
+			PrimitiveTopology::TriangleStrip
+		}
+	};
+
+#else
+
+
+	m_Meshes = {
+		{
+			{
+				//vertexes
+				{
+					{-3.f, 3.f, -2.f},
+					{1},
+					{0.f,0.f}
+				},
+				{
+					{-0.f, 3.f, -2.f},
+					{1},
+					{0.5f,0.f}
+				},
+				{
+					{3.f, 3.f, -2.f},
+					{1},
+					{1.f,0.f}
+				},
+				{
+					{-3.f, 0.f, -2.f},
+					{1},
+					{0.f,0.5f}
+				},
+				{
+					{0.f, 0.f, -2.f},
+					{1},
+					{0.5f,0.5f}
+				},
+				{
+					{3.f, 0.f, -2.f},
+					{1},
+					{1.f,0.5f}
+				},
+				{
+					{-3.f, -3.f, -2.f},
+					{1},
+					{0.f,1.f}
+				},
+				{
+					{0.f, -3.f, -2.f},
+					{1},
+					{0.5f,1.f}
+				},
+				{
+					{3.f, -3.f, -2.f},
+					{1},
+					{1.f,1.f}
+				},
+			},
+			{
+				3,0,1, 1,4,3, 4,1,2,
+				2,5,4, 6,3,4, 4,7,6,
+				7,4,5, 5,8,7
+			},
+			PrimitiveTopology::TriangleStrip
+		}
+	};
+
+
+#endif
+
+	//---------------------- Reposition Points
+
+	VertexTransformationFunction(m_Meshes[0].vertices, m_Vertex_Outs);
+
 }
 
-void dae::Renderer::Render_W1_Part4()
+void dae::Renderer::RenderPix()
 {
-}
+	for (int px{}; px < m_Width; ++px)
+	{
+		for (int py{}; py < m_Height; ++py)
+		{
+			Vector2 screenPix{ float(px),float(py) };
 
-void dae::Renderer::Render_W1_Part5()
-{
+			float gradient{};
+
+
+
+			if (px < m_BoundBoxMin.x || px > m_BoundBoxMax.x || py < m_BoundBoxMin.y || py > m_BoundBoxMax.y)
+				continue;
+
+			if (m_RenderHitBox)
+			{
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(1 * 255),
+					static_cast<uint8_t>(1 * 255),
+					static_cast<uint8_t>(1 * 255));
+				continue;
+			}
+
+			//m_TriToPix[0] = { screenPix - m_tri[0] };
+			//m_TriToPix[1] = { screenPix - m_tri[1] };
+			//m_TriToPix[2] = { screenPix - m_tri[2] };
+
+			m_TriToPix[0] = { m_tri[0] - screenPix };
+			m_TriToPix[1] = { m_tri[1] - screenPix };
+			m_TriToPix[2] = { m_tri[2] - screenPix };
+
+			if (lastX != m_tri[0].x)
+			{
+				//std::cout << m_tri[0].x << std::endl;
+				lastX = m_tri[0].x;
+			}
+
+			//m_TriToPix[0] = { m_tri[0] - screenPix };
+			//m_TriToPix[1] = { m_tri[1] - screenPix };
+			//m_TriToPix[2] = { m_tri[2] - screenPix };
+
+			m_triCross[0] = { Vector2::Cross(m_Edges[0], m_TriToPix[0]) };
+			m_triCross[1] = { Vector2::Cross(m_Edges[1], m_TriToPix[1]) };
+			m_triCross[2] = { Vector2::Cross(m_Edges[2], m_TriToPix[2]) };
+
+			//Texture
+
+			if ((m_triCross[0] > 0 || m_triCross[1] > 0 || m_triCross[2] > 0))
+				continue;
+
+			m_weight[0] = { m_triCross[1] / m_triArea };
+			m_weight[1] = { m_triCross[2] / m_triArea };
+			m_weight[2] = { m_triCross[0] / m_triArea };
+
+			//inerPolat[0] = { 1 / (vieuwVertices[0].position.z) * m_weight[0] };
+			//inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * m_weight[1] };
+			//inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * m_weight[2] };
+
+			m_inerPolat[0] = { m_weight[0] / (m_vieuwVertices[0].position.z) };
+			m_inerPolat[1] = { m_weight[1] / (m_vieuwVertices[1].position.z) };
+			m_inerPolat[2] = { m_weight[2] / (m_vieuwVertices[2].position.z) };
+
+			float inerPolatWeight = { 1.f / (m_inerPolat[0] + m_inerPolat[1] + m_inerPolat[2]) };
+
+			int pIdx{ px + py * m_Width };
+
+			if (m_pDepthBufferPixels[pIdx] < inerPolatWeight)
+				continue;
+
+			m_pDepthBufferPixels[pIdx] = inerPolatWeight;
+
+			//-------------------------
+
+			//m_UV[0] = { m_weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
+			//m_UV[1] = { m_weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
+			//m_UV[2] = { m_weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
+
+			m_UV[0] = { m_weight[0] * (m_vieuwVertices[0].uv / m_vieuwVertices[0].position.z) };
+			m_UV[1] = { m_weight[1] * (m_vieuwVertices[1].uv / m_vieuwVertices[1].position.z) };
+			m_UV[2] = { m_weight[2] * (m_vieuwVertices[2].uv / m_vieuwVertices[2].position.z) };
+
+			Vector2 fullUV = { (m_UV[0] + m_UV[1] + m_UV[2]) * inerPolatWeight };
+
+			ColorRGB finalColor
+			{
+				m_pTexture->Sample(fullUV)
+			};
+
+			//--------------------------
+
+				//Update Color in Buffer
+			finalColor.MaxToOne();
+
+			m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+				static_cast<uint8_t>(finalColor.r * 255),
+				static_cast<uint8_t>(finalColor.g * 255),
+				static_cast<uint8_t>(finalColor.b * 255));
+
+		}
+
+	}
 }
