@@ -32,18 +32,21 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pDepthBufferPixels = new float[m_Width * m_Height];
 
 	//Initialize Camera
-	m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
+	//m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
 
 #ifdef TriStrip
 
+	m_Camera.Initialize(60.f, { .0f,0.0f,-20.f });
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 
 #elif defined(OBJ)
-	
+
+	m_Camera.Initialize(60.f, { .0f,5.0f,-30.f });
 	m_pTexture = Texture::LoadFromFile("Resources/tuktuk.png");
 
 #else
 
+	m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 
 #endif // TriStrip
@@ -582,6 +585,7 @@ void dae::Renderer::Render_1()
 
 void dae::Renderer::Render_2()
 {
+
 	//Reset
 	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
 
@@ -594,7 +598,7 @@ void dae::Renderer::Render_2()
 
 	//Render Pixel
 
-	for (int i = 0; i < m_Meshes[0].indices.size() - 2; i++)
+	for (int i = 0; i < m_Meshes[0].indices.size(); i+=3)
 	{
 #ifdef TriStrip
 
