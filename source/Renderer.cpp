@@ -50,6 +50,8 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 
 #endif // TriStrip
+
+	SetPositionInfo();
 }
 
 Renderer::~Renderer()
@@ -61,6 +63,7 @@ Renderer::~Renderer()
 void Renderer::Update(Timer* pTimer)
 {
 	m_Camera.Update(pTimer);
+	RotateOBJ();
 }
 
 void Renderer::Render()
@@ -594,7 +597,7 @@ void dae::Renderer::Render_2()
 
 	//Reposition Points
 
-	SetPositionInfo();
+	VertexTransformationFunction(m_Meshes[0].vertices, m_Vertex_Outs);
 
 	//Render Pixel
 
@@ -787,7 +790,6 @@ void dae::Renderer::SetPositionInfo()
 
 	//---------------------- Reposition Points
 
-	VertexTransformationFunction(m_Meshes[0].vertices, m_Vertex_Outs);
 
 }
 
@@ -868,53 +870,76 @@ void dae::Renderer::RenderPix()
 
 			//-------------------------
 
-			//m_UV[0] = { m_weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
-			//m_UV[1] = { m_weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
-			//m_UV[2] = { m_weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
-
-			m_UV[0] = { m_weight[0] * (m_vieuwVertices[0].uv / m_vieuwVertices[0].position.z) };
-			m_UV[1] = { m_weight[1] * (m_vieuwVertices[1].uv / m_vieuwVertices[1].position.z) };
-			m_UV[2] = { m_weight[2] * (m_vieuwVertices[2].uv / m_vieuwVertices[2].position.z) };
-
-			Vector2 fullUV = { (m_UV[0] + m_UV[1] + m_UV[2]) * inerPolatWeight };
-
 			ColorRGB finalColor
+			{};
+			Vector2 fullUV{};
+			float d{};
+
+			switch (m_RenderMode)
 			{
-				m_pTexture->Sample(fullUV)
-			};
+			case dae::Renderer::RenderMode::Texture:
+				//m_UV[0] = { m_weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
+				//m_UV[1] = { m_weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
+				//m_UV[2] = { m_weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
 
-			//--------------------------
+				m_UV[0] = { m_weight[0] * (m_vieuwVertices[0].uv / m_vieuwVertices[0].position.z) };
+				m_UV[1] = { m_weight[1] * (m_vieuwVertices[1].uv / m_vieuwVertices[1].position.z) };
+				m_UV[2] = { m_weight[2] * (m_vieuwVertices[2].uv / m_vieuwVertices[2].position.z) };
 
-				//Update Color in Buffer
-			finalColor.MaxToOne();
+				fullUV = { (m_UV[0] + m_UV[1] + m_UV[2]) * inerPolatWeight };
 
-			m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
+				finalColor = 
+				{
+					m_pTexture->Sample(fullUV)
+				};
 
+				//--------------------------
 
+					//Update Color in Buffer
+				finalColor.MaxToOne();
 
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
+				break;
 
+			case dae::Renderer::RenderMode::Depth:
 
+				d = { -(1.0f / inerPolatWeight) * 10 };
 
-			// DEPTH !!!!!!!! SET IN SWITCH LATER;
+				finalColor = 
+				{
+					d, d, d
+				};
 
-			//float d = { -(1.0f / inerPolatWeight) * 10 };
+				finalColor.MaxToOne();
 
-			//ColorRGB finalColor
-			//{
-			//	d, d, d
-			//};
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
 
-			//finalColor.MaxToOne();
-
-			//m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-			//	static_cast<uint8_t>(finalColor.r * 255),
-			//	static_cast<uint8_t>(finalColor.g * 255),
-			//	static_cast<uint8_t>(finalColor.b * 255));
+				break;
+			default:
+				break;
+			}
 
 		}
 
 	}
+}
+
+void dae::Renderer::RotateOBJ()
+{
+	//m_Meshes[0].worldMatrix = Matrix::CreateRotationY(20.f);
+
+	//for (auto& v : m_Meshes[0].vertices)
+	//{
+	//	v.position.y += cos(20.f);
+	//	v.position.z += sin(20.f);
+
+	//	v.position.z += cos(20.f);
+	//	v.position.x += sin(20.f);
+	//}
 }

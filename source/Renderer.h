@@ -40,12 +40,24 @@ namespace dae
 
 		// BIG CLEANUP FUNCTIONS AND VARS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+			//enum
+
+			enum class RenderMode
+			{
+				Texture,
+				Depth
+			};
+
+			RenderMode m_RenderMode{ RenderMode::Texture };
+
 			// functions
 
 			void Render_2();
 
 			void SetPositionInfo();
 			void RenderPix();
+
+			void RotateOBJ();
 
 			// vars
 
@@ -82,7 +94,17 @@ namespace dae
 		void ToggleNormalMap() { m_RenderNormalMap = !m_RenderNormalMap; std::cout << "Test normalMap Toggle" << std::endl; };
 		void CycleShadingMode() 
 		{ 
-			std::cout << "Test rotation Toggle" << std::endl;
+			switch (m_RenderMode)
+			{
+			case dae::Renderer::RenderMode::Texture:
+				m_RenderMode = dae::Renderer::RenderMode::Depth;
+				break;
+			case dae::Renderer::RenderMode::Depth:
+				m_RenderMode = dae::Renderer::RenderMode::Texture;
+				break;
+			default:
+				break;
+			}
 		};
 
 	private:
