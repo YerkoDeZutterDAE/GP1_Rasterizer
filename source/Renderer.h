@@ -36,7 +36,6 @@ namespace dae
 		bool SaveBufferToImage() const;
 
 		//Exersize Parts
-		void Render_1();
 
 		// BIG CLEANUP FUNCTIONS AND VARS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -54,7 +53,7 @@ namespace dae
 
 			// functions
 
-			void Render_2();
+			void RenderS();
 
 			void SetPositionInfo();
 			void RenderPix();
