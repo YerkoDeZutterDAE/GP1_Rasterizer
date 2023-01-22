@@ -25,6 +25,8 @@ namespace dae
 		float fovAngle{90.f};
 		float fov{ tanf((fovAngle * TO_RADIANS) / 2.f) };
 
+		float aspec{};
+
 		Vector3 forward{Vector3::UnitZ};
 		Vector3 up{Vector3::UnitY};
 		Vector3 right{Vector3::UnitX};
@@ -34,6 +36,7 @@ namespace dae
 
 		Matrix invViewMatrix{};
 		Matrix viewMatrix{};
+		Matrix projectionMatrix{};
 
 		// z axis space limits
 		float tmin{0.1f};
@@ -41,10 +44,12 @@ namespace dae
 
 		float moveSpeed{ 1.f };
 
-		void Initialize(float _fovAngle = 90.f, Vector3 _origin = {0.f,0.f,0.f})
+		void Initialize(float _fovAngle = 90.f, float _aspec = 0.f, Vector3 _origin = {0.f,0.f,0.f})
 		{
 			fovAngle = _fovAngle;
 			fov = tanf((fovAngle * TO_RADIANS) / 2.f);
+
+			aspec = _aspec;
 
 			origin = _origin;
 		}
@@ -72,6 +77,8 @@ namespace dae
 		{
 			//TODO W2
 
+			projectionMatrix = Matrix::CreatePerspectiveFovLH(fov, aspec, tmin, tmax);
+
 			//ProjectionMatrix => Matrix::CreatePerspectiveFovLH(...) [not implemented yet]
 			//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovlh
 		}
@@ -95,9 +102,9 @@ namespace dae
 			//assert(false && "Not Implemented Yet");
 
 			if (pKeyboardState[SDL_SCANCODE_LSHIFT])
-				moveSpeed = 6.f;
+				moveSpeed = 60.f;
 			else
-				moveSpeed = 3.f;
+				moveSpeed = 30.f;
 
 			if (pKeyboardState[SDL_SCANCODE_W])
 			{
@@ -157,6 +164,8 @@ namespace dae
 
 				forward.Normalize();
 			}
+
+			right = Vector3::Cross({0,1,0}, forward);
 
 			//Update Matrices
 			CalculateViewMatrix();

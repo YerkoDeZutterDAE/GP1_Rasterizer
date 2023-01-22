@@ -32,21 +32,28 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pDepthBufferPixels = new float[m_Width * m_Height];
 
 	//Initialize Camera
+	
+	float aspec{ (float(m_Width) / float(m_Height)) };
+
 	//m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
 
 #ifdef TriStrip
 
-	m_Camera.Initialize(60.f, { .0f,0.0f,-20.f });
+	m_Camera.Initialize(60.f, aspec, { .0f,0.0f,-20.f });
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 
 #elif defined(OBJ)
 
-	m_Camera.Initialize(60.f, { .0f,5.0f,-30.f });
-	m_pTexture = Texture::LoadFromFile("Resources/tuktuk.png");
+	m_Camera.Initialize(60.f, aspec, { .0f,5.0f,-30.f });
+	//m_pTexture = Texture::LoadFromFile("Resources/tuktuk.png");
+	m_pTexture = Texture::LoadFromFile("Resources/vehicle_diffuse.png");
+	m_pNormalMap = Texture::LoadFromFile("Resources/vehicle_normal.png");
+	m_pGlossMap = Texture::LoadFromFile("Resources/vehicle_gloss.png");
+	m_pSpecularMap = Texture::LoadFromFile("Resources/vehicle_specular.png");
 
 #else
 
-	m_Camera.Initialize(60.f, { .0f,0.0f,-25.f });
+	m_Camera.Initialize(60.f, aspec, { .0f,0.0f,-25.f });
 	m_pTexture = Texture::LoadFromFile("Resources/uv_grid_2.png");
 
 #endif // TriStrip
@@ -58,12 +65,15 @@ Renderer::~Renderer()
 {
 	delete[] m_pDepthBufferPixels;
 	delete m_pTexture;
+	delete m_pNormalMap;
+	delete m_pGlossMap;
+	delete m_pSpecularMap;
 }
 
 void Renderer::Update(Timer* pTimer)
 {
 	m_Camera.Update(pTimer);
-	RotateOBJ();
+	RotateOBJ(pTimer);
 }
 
 void Renderer::Render()
@@ -86,29 +96,51 @@ void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_
 {
 	vertices_out = {};
 	vertices_out.reserve(vertices_in.size());
+	//Matrix testMatrix{ m_Camera.viewMatrix * m_Meshes[0].worldMatrix };
+	Matrix testMatrix{ m_Meshes[0].worldMatrix * m_Camera.viewMatrix * m_Camera.projectionMatrix };
+
 	for (auto v : vertices_in)
 	{
+		Vertex_Out vOut{};
+		//v.position = m_Camera.invViewMatrix.TransformPoint(v.position);
 
-		//std::cout << v.position.x << std::endl;
-		v.position = m_Camera.invViewMatrix.TransformPoint(v.position);
+		//v.position = testMatrix.TransformPoint(v.position);
+		vOut.position = testMatrix.TransformPoint({ v.position, 1.0f });
+
+		////v.position.x = v.position.x / (m_Camera.aspec * m_Camera.fov) / v.position.z;
+		////v.position.y = v.position.y / m_Camera.fov / v.position.z;
+		////v.position.z = v.position.z;
+
+		//v.position.x = v.position.x;
+		//v.position.y = v.position.y;
+		//v.position.z = v.position.z;
+
+		//v.position.x = v.position.x * m_Width + m_Width / 2;
+		//v.position.y = v.position.y * m_Height + m_Height / 2;
+
+		//////-----------------------------------------------------------
+
+		vOut.viewDirection = { vOut.position.x , vOut.position.y , vOut.position.z};
+		vOut.viewDirection.Normalize();
+
+		vOut.position.x /= vOut.position.w;
+		vOut.position.y /= vOut.position.w;
+		vOut.position.z /= vOut.position.w;
+
+		vOut.position.x = vOut.position.x * m_Width + m_Width / 2;
+		vOut.position.y = vOut.position.y * m_Height + m_Height / 2;
+
+		vOut.normal = m_Meshes[0].worldMatrix.TransformVector(v.normal);
+		vOut.normal.Normalize();
+
+		vOut.tangent = m_Meshes[0].worldMatrix.TransformVector(v.tangent);
+		vOut.normal.Normalize();
 
 
-		float aspec{ (float(m_Width) / float(m_Height)) };
+		//Vector4 pos = { v.position.x, v.position.y, v.position.z, 0 };
+		Vector4 pos = { vOut.position.x, vOut.position.y, vOut.position.z, vOut.position.w };
 
-		v.position.x = v.position.x / (aspec * m_Camera.fov) / v.position.z;
-		v.position.y = v.position.y / m_Camera.fov / v.position.z;
-		v.position.z = v.position.z;
-
-		//-----------------------------------------------------------
-
-		v.position.x = v.position.x * m_Width + m_Width / 2;
-		v.position.y = v.position.y * m_Height + m_Height / 2;
-
-
-
-		Vector4 pos = { v.position.x, v.position.y, v.position.z, 0 };
-
-		Vertex_Out out = Vertex_Out{ pos, v.color, v.uv, v.normal };
+		Vertex_Out out = Vertex_Out{ pos, v.color, v.uv, vOut.normal, vOut.tangent, vOut.viewDirection };
 
 		vertices_out.emplace_back(out);
 	}
@@ -660,7 +692,8 @@ void dae::Renderer::SetPositionInfo()
 
 	m_Meshes = { {} };
 
-	Utils::ParseOBJ("Resources/tuktuk.obj", m_Meshes[0].vertices, m_Meshes[0].indices);
+	//Utils::ParseOBJ("Resources/tuktuk.obj", m_Meshes[0].vertices, m_Meshes[0].indices);
+	Utils::ParseOBJ("Resources/vehicle.obj", m_Meshes[0].vertices, m_Meshes[0].indices);
 
 #elif defined(TriStrip)
 
@@ -790,7 +823,7 @@ void dae::Renderer::SetPositionInfo()
 
 	//---------------------- Reposition Points
 
-
+	m_Meshes[0].worldMatrix = Matrix::CreateScale({ 1.f,1.f,1.f }) * Matrix::CreateRotationY(0.3f) * Matrix::CreateTranslation(Vector3{ 0.f,0.f,50.f });
 }
 
 void dae::Renderer::RenderPix()
@@ -852,6 +885,8 @@ void dae::Renderer::RenderPix()
 			//inerPolat[1] = { 1 / (vieuwVertices[1].position.z) * m_weight[1] };
 			//inerPolat[2] = { 1 / (vieuwVertices[2].position.z) * m_weight[2] };
 
+			// interpolar Z
+
 			m_inerPolat[0] = { m_weight[0] / (m_vieuwVertices[0].position.z) };
 			m_inerPolat[1] = { m_weight[1] / (m_vieuwVertices[1].position.z) };
 			m_inerPolat[2] = { m_weight[2] / (m_vieuwVertices[2].position.z) };
@@ -862,36 +897,145 @@ void dae::Renderer::RenderPix()
 
 			if (m_pDepthBufferPixels[pIdx] < inerPolatWeight)
 				continue;
+			if (inerPolatWeight < m_Camera.tmin, inerPolatWeight > m_Camera.tmax)
+				continue;
 
 			m_pDepthBufferPixels[pIdx] = inerPolatWeight;
 
 			if (BigestD < inerPolatWeight)
 				BigestD = inerPolatWeight;
 
+			//---------Interpolar W-----------
+
+			m_inerPolat[0] = { m_weight[0] / (m_vieuwVertices[0].position.w) };
+			m_inerPolat[1] = { m_weight[1] / (m_vieuwVertices[1].position.w) };
+			m_inerPolat[2] = { m_weight[2] / (m_vieuwVertices[2].position.w) };
+
+			float inerPolatW = { 1.f / (m_inerPolat[0] + m_inerPolat[1] + m_inerPolat[2]) };
+
+			//UV CREATION
+
+			m_UV[0] = { m_weight[0] * (m_vieuwVertices[0].uv / m_vieuwVertices[0].position.w) };
+			m_UV[1] = { m_weight[1] * (m_vieuwVertices[1].uv / m_vieuwVertices[1].position.w) };
+			m_UV[2] = { m_weight[2] * (m_vieuwVertices[2].uv / m_vieuwVertices[2].position.w) };
+
+			Vector2 fullUV = { (m_UV[0] + m_UV[1] + m_UV[2]) * inerPolatW };
+
+			//----------Tangent----------
+
+			Vector3 tanInterpolar0 = {m_weight[0] * (m_vieuwVertices[0].tangent / m_vieuwVertices[0].position.w)};
+			Vector3 tanInterpolar1 = {m_weight[1] * (m_vieuwVertices[1].tangent / m_vieuwVertices[1].position.w)};
+			Vector3 tanInterpolar2 = {m_weight[2] * (m_vieuwVertices[2].tangent / m_vieuwVertices[2].position.w)};
+
+			Vector3 tangent = { tanInterpolar0 + tanInterpolar1 + tanInterpolar2 };
+			//td::cout << m_vieuwVertices[0].tangent.x << std::endl;
+			tangent *= inerPolatW;
+			tangent.Normalize();
+
+			//-----------view dir---------
+
+			Vector3 vDInterpolar0 = { m_weight[0] * (m_vieuwVertices[0].viewDirection / m_vieuwVertices[0].position.w) };
+			Vector3 vDInterpolar1 = { m_weight[1] * (m_vieuwVertices[1].viewDirection / m_vieuwVertices[1].position.w) };
+			Vector3 vDInterpolar2 = { m_weight[2] * (m_vieuwVertices[2].viewDirection / m_vieuwVertices[2].position.w) };
+
+			Vector3 viewDir = { vDInterpolar0 + vDInterpolar1 + vDInterpolar2 };
+			//td::cout << m_vieuwVertices[0].viewDir.x << std::endl;
+			viewDir *= inerPolatW;
+			viewDir.Normalize();
+
+			//----------NORMAL---------
+
+			// W normal creation
+			Vector3 Wnormal = m_vieuwVertices[0].normal * m_weight[0] +
+				m_vieuwVertices[1].normal * m_weight[1] +
+				m_vieuwVertices[2].normal * m_weight[2];
+
+			//Wnormal = (m_vieuwVertices[0].normal / m_vieuwVertices[0].position.w) * m_weight[0] +
+			//	(m_vieuwVertices[1].normal / m_vieuwVertices[1].position.w) * m_weight[1] +
+			//	(m_vieuwVertices[2].normal / m_vieuwVertices[2].position.w) * m_weight[2];
+
+			Wnormal.Normalize();
+
+			// render normalmap
+
+			if (m_RenderNormalMap)
+			{
+				//axis creation
+				Vector3 norTanCross = { Wnormal.Cross(Wnormal, tangent) };
+				Matrix tanAxis = { tangent , norTanCross , Wnormal , {0,0,0} };
+
+				//normal sample map
+				//ColorRGB ColorSampeldNormalMap = { m_pNormalMap->Sample(fullUV) };
+				ColorRGB ColorSampeldNormalMap = { 2.f * m_pNormalMap->Sample(fullUV) - ColorRGB{1.f,1.f,1.f} };
+				Vector3 sampeldNormalMap = { ColorSampeldNormalMap.r,
+					ColorSampeldNormalMap.g,
+					ColorSampeldNormalMap.b };
+
+				Wnormal = tanAxis.TransformVector(sampeldNormalMap);
+				Wnormal.Normalize();
+			}
+
 			//-------------------------
+
+			float lightI = {7.f};
 
 			ColorRGB finalColor
 			{};
-			Vector2 fullUV{};
+			float observed{};
+			ColorRGB lambert{};
+			ColorRGB Specular{};
+
 			float d{};
+
+			float c{};
+			float d2{};
+
+			if (m_RenderDepth)
+			{
+				//d = { (1.0f / inerPolatWeight) };
+				d = { inerPolatWeight * 100 - 99 };
+
+				//Remap();
+
+				c = { std::clamp(inerPolatWeight,  0.999f, 1.f) };
+				d2 = { (c - 0.999f) / (1.f - 0.999f) };
+
+				if (d2 < 0.9f)
+				{
+					//std::cout << d2 << std::endl;
+				}
+
+				finalColor =
+				{
+					d2, d2, d2
+				};
+
+				finalColor.MaxToOne();
+
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
+			}
+
+			observed = { Wnormal.Dot(Wnormal, (Vector3{ 0.577f, -0.577f, 0.577f })) };
+
+			//observed = abs(observed);
+			observed = std::min(observed, 0.f);
+			observed = abs(observed);
 
 			switch (m_RenderMode)
 			{
-			case dae::Renderer::RenderMode::Texture:
-				//m_UV[0] = { m_weight[0] * (vieuwVertices[0].uv / vieuwVertices0[indeces[ i + 0 ]].position.z) };
-				//m_UV[1] = { m_weight[1] * (vieuwVertices[1].uv / vieuwVertices0[indeces[ i + 1 ]].position.z) };
-				//m_UV[2] = { m_weight[2] * (vieuwVertices[2].uv / vieuwVertices0[indeces[ i + 2 ]].position.z) };
+			case dae::Renderer::RenderMode::Full:
 
-				m_UV[0] = { m_weight[0] * (m_vieuwVertices[0].uv / m_vieuwVertices[0].position.z) };
-				m_UV[1] = { m_weight[1] * (m_vieuwVertices[1].uv / m_vieuwVertices[1].position.z) };
-				m_UV[2] = { m_weight[2] * (m_vieuwVertices[2].uv / m_vieuwVertices[2].position.z) };
+				Specular = m_pSpecularMap->Sample(fullUV) * Utils::Phong(1.f, (m_pGlossMap->Sample(fullUV).r * 25.f), { 0.577f, -0.577f, 0.577f }, viewDir, Wnormal);
+				lambert = m_pTexture->Sample(fullUV) / float(M_PI);
 
-				fullUV = { (m_UV[0] + m_UV[1] + m_UV[2]) * inerPolatWeight };
-
-				finalColor = 
+				finalColor =
 				{
-					m_pTexture->Sample(fullUV)
+					lightI * lambert + Specular
 				};
+				finalColor *= observed;
 
 				//--------------------------
 
@@ -904,13 +1048,12 @@ void dae::Renderer::RenderPix()
 					static_cast<uint8_t>(finalColor.b * 255));
 				break;
 
-			case dae::Renderer::RenderMode::Depth:
-
-				d = { -(1.0f / inerPolatWeight) * 10 };
-
+			case dae::Renderer::RenderMode::Observed:
 				finalColor = 
 				{
-					d, d, d
+					observed,
+					observed,
+					observed
 				};
 
 				finalColor.MaxToOne();
@@ -919,7 +1062,37 @@ void dae::Renderer::RenderPix()
 					static_cast<uint8_t>(finalColor.r * 255),
 					static_cast<uint8_t>(finalColor.g * 255),
 					static_cast<uint8_t>(finalColor.b * 255));
+				break;
+			case dae::Renderer::RenderMode::Difuse:
+				finalColor = 
+				{
+					m_pTexture->Sample(fullUV) / float(M_PI)
+				};
 
+				finalColor *= observed * lightI;
+				 
+				finalColor *= lightI;
+				finalColor *= observed;
+
+				finalColor.MaxToOne();
+
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
+				break;
+			case dae::Renderer::RenderMode::Spec:
+				finalColor =
+				{
+					m_pSpecularMap->Sample(fullUV)* Utils::Phong(1.f, (m_pGlossMap->Sample(fullUV).r * 25.f), { 0.577f, -0.577f, 0.577f }, viewDir, Wnormal)
+				};
+
+				finalColor.MaxToOne();
+
+				m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(finalColor.r * 255),
+					static_cast<uint8_t>(finalColor.g * 255),
+					static_cast<uint8_t>(finalColor.b * 255));
 				break;
 			default:
 				break;
@@ -930,16 +1103,12 @@ void dae::Renderer::RenderPix()
 	}
 }
 
-void dae::Renderer::RotateOBJ()
+void dae::Renderer::RotateOBJ(Timer* pTimer)
 {
-	//m_Meshes[0].worldMatrix = Matrix::CreateRotationY(20.f);
-
-	//for (auto& v : m_Meshes[0].vertices)
-	//{
-	//	v.position.y += cos(20.f);
-	//	v.position.z += sin(20.f);
-
-	//	v.position.z += cos(20.f);
-	//	v.position.x += sin(20.f);
-	//}
+	if (m_RenderRotation)
+	{
+		float anglePerSec = { 0.5f };
+		float newAddedAngle = { pTimer->GetElapsed() * anglePerSec };
+		m_Meshes[0].worldMatrix = Matrix::CreateRotationY(newAddedAngle) * m_Meshes[0].worldMatrix;
+	}
 }

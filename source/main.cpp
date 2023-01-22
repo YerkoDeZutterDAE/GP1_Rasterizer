@@ -68,6 +68,9 @@ int main(int argc, char* args[])
 
 				switch (e.key.keysym.scancode)
 				{
+				case SDL_SCANCODE_F3:
+					pRenderer->RenderDepth();
+					break;
 				case SDL_SCANCODE_F4:
 					pRenderer->RenderHitBox();
 					break;

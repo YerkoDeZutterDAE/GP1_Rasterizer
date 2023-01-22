@@ -173,6 +173,32 @@ namespace dae
 #endif
 		}
 #pragma warning(pop)
+
+		ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
+		{
+
+			//Vector3 reflection{ -l - 2 * Vector3::Dot(n,-l) * n };
+
+			//reflection.Normalize();
+
+			//float cos{ Vector3::Dot(reflection, v) };
+
+			//for (int i = 0; i < exp; i++)
+			//{
+			//	cos *= cos;
+			//}
+			//ColorRGB phong{ ks * cos };
+
+			//return { phong };
+
+			Vector3 reflection = {Vector3::Reflect(l,n)};
+			float cos = { std::max(Vector3::Dot(reflection, v), 0.f) };
+			ColorRGB phong{ ks * powf(cos,exp)};
+
+			//return { phong };
+			return { phong.r, phong.r, phong.r };
+		}
+
 		void Bresenham(const Vector2& p1, const Vector2& p2, const ColorRGB& color1, const ColorRGB& color2, std::vector<Vector2>& outputY, std::vector<std::vector<dae::ColorRGB>>& outputColors)
 		{
 

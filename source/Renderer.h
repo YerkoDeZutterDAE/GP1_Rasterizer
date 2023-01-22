@@ -44,11 +44,13 @@ namespace dae
 
 			enum class RenderMode
 			{
-				Texture,
-				Depth
+				Full,
+				Observed,
+				Difuse,
+				Spec
 			};
 
-			RenderMode m_RenderMode{ RenderMode::Texture };
+			RenderMode m_RenderMode{ RenderMode::Full };
 
 			// functions
 
@@ -57,7 +59,7 @@ namespace dae
 			void SetPositionInfo();
 			void RenderPix();
 
-			void RotateOBJ();
+			void RotateOBJ(Timer* pTimer);
 
 			// vars
 
@@ -90,17 +92,24 @@ namespace dae
 
 		//Button Press Events
 		void RenderHitBox() { m_RenderHitBox = !m_RenderHitBox; std::cout << "Test HitBox Render" << std::endl; };
+		void RenderDepth() { m_RenderDepth = !m_RenderDepth; std::cout << "Test Depth Render" << std::endl; };
 		void ToggleRotation() { m_RenderRotation = !m_RenderRotation; std::cout << "Test rotation Toggle" << std::endl; };
 		void ToggleNormalMap() { m_RenderNormalMap = !m_RenderNormalMap; std::cout << "Test normalMap Toggle" << std::endl; };
 		void CycleShadingMode() 
 		{ 
 			switch (m_RenderMode)
 			{
-			case dae::Renderer::RenderMode::Texture:
-				m_RenderMode = dae::Renderer::RenderMode::Depth;
+			case dae::Renderer::RenderMode::Full:
+				m_RenderMode = dae::Renderer::RenderMode::Observed;
 				break;
-			case dae::Renderer::RenderMode::Depth:
-				m_RenderMode = dae::Renderer::RenderMode::Texture;
+			case dae::Renderer::RenderMode::Observed:
+				m_RenderMode = dae::Renderer::RenderMode::Difuse;
+				break;
+			case dae::Renderer::RenderMode::Difuse:
+				m_RenderMode = dae::Renderer::RenderMode::Spec;
+				break;
+			case dae::Renderer::RenderMode::Spec:
+				m_RenderMode = dae::Renderer::RenderMode::Full;
 				break;
 			default:
 				break;
@@ -115,6 +124,9 @@ namespace dae
 		uint32_t* m_pBackBufferPixels{};
 
 		Texture* m_pTexture{nullptr};
+		Texture* m_pNormalMap{nullptr};
+		Texture* m_pGlossMap{nullptr};
+		Texture* m_pSpecularMap{nullptr};
 
 		float* m_pDepthBufferPixels{};
 
@@ -126,8 +138,9 @@ namespace dae
 
 		//Button Press Events
 		bool m_RenderHitBox{false};
-		bool m_RenderRotation{false};
-		bool m_RenderNormalMap{false};
+		bool m_RenderRotation{true};
+		bool m_RenderNormalMap{true};
+		bool m_RenderDepth{false};
 
 		//Function that transforms the vertices from the mesh from World space to Screen space
 		void VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex_Out>& vertices_out) const; //W1 Version

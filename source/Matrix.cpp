@@ -169,7 +169,17 @@ namespace dae {
 	{
 		//TODO W2
 
-		return {};
+		float f_n = {zf - zn};
+		float yS = { 1 / tan(0.5f * fov) };
+		float xS = {yS / aspect};
+
+		return 
+		{
+			{xS,			0.f,		0.f,				0.f},
+			{0.f,			yS,			0.f,				0.f},
+			{0.f,			0.f,		zf / f_n,			1.f},
+			{0.f,			0.f,		-zn * zf / f_n,		0.f}
+		};
 	}
 
 	Vector3 Matrix::GetAxisX() const
